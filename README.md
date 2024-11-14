@@ -11,7 +11,7 @@ sudo service postgresql start
 pip install -r requirements.txt
 
 # Run the uvicorn server
-uvicornmachine_learning.main:app --reload
+uvicorn machine_learning.main:app --reload
 
 # Open the project in the browser
 localhost:8000
