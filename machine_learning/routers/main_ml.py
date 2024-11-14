@@ -1,5 +1,6 @@
 from fastapi import APIRouter
 from ..services.main_ml_service import MachineLearningService
+from ..schemas import RegressionSchema
 
 
 router = APIRouter(
@@ -13,7 +14,15 @@ def process_request():
     return ml_response
 
 @router.post('/linear-regression')
-def process_request():
-    rlm_response = MachineLearningService().regression_linear_model()
+def process_request(
+    request: RegressionSchema
+):
+    rlm_response = MachineLearningService().regression_linear_model(request=request)
     
     return rlm_response
+
+@router.post('/multi-linear-regression')
+def process_request():
+    rmlm_response = MachineLearningService().regression_multi_linear_model()
+    
+    return rmlm_response
