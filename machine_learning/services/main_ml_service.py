@@ -1,6 +1,8 @@
 from fastapi import HTTPException
+from ..schemas import RegressionSchema
 import pandas as pd
 import matplotlib.pyplot as plt
+import seaborn as sns
 
 from sklearn.linear_model import LinearRegression
 from sklearn.model_selection import train_test_split
@@ -15,7 +17,9 @@ class MachineLearningService:
     def handle_user_query(self):
         try:
             # Get the data in the folder path
-            data = pd.read_csv('/home/gaylord/machine_learning_v01/machine_learning/sample_data/Advertising.csv')
+            # data = pd.read_csv('/home/gaylord/machine_learning_v01/machine_learning/sample_data/Advertising.csv') # gecc laptop 
+            data = pd.read_csv('/mnt/c/Users/Gaylord Carrillo/Documents/develop/machine_learning_regression/machine_learning/sample_data/Advertising.csv') # gecc desktop
+
             # Convert DataFrame to a list of dictionaries
             data_dict = data.to_dict(orient="records")
             # Get data information
@@ -47,12 +51,16 @@ class MachineLearningService:
             )
         
     
-    def regression_linear_model(self):
+    def regression_linear_model(
+            self,
+            request: RegressionSchema
+        ):
 
         try:
             # Get the data in the folder path
-            data = pd.read_csv('/home/gaylord/machine_learning_v01/machine_learning/sample_data/Advertising.csv')
-            X = data['TV'].values.reshape(-1,1)   # Reshape 'TV' column values into a 2D array
+            # data = pd.read_csv('/home/gaylord/machine_learning_v01/machine_learning/sample_data/Advertising.csv') # gecc laptop 
+            data = pd.read_csv('/mnt/c/Users/Gaylord Carrillo/Documents/develop/machine_learning_regression/machine_learning/sample_data/Advertising.csv') # gecc desktop 
+            X = data[request.column_name].values.reshape(-1,1)   # Reshape 'TV', 'Radio', 'Newspaper' column values into a 2D array
             Y = data['Sales'].values
 
             # Split the data sample into trainind ans testing data
@@ -78,7 +86,7 @@ class MachineLearningService:
             filenames = []
             results_graphics_path = 'results_graphics'
             plt.plot(X_test, Y_test, 'ro')
-            plt.title("Grafica de regresion linea")
+            plt.title(f"Regresion lineal para predecir datos de {request.column_name.value}")
             plt.plot(X_test,y_predict)
             file_path = os.path.join(results_graphics_path, f"plotregression.png")
             plt.savefig(file_path)
@@ -91,4 +99,60 @@ class MachineLearningService:
             raise HTTPException(
                 status_code=422,
                 detail=f"regression linear model: {str(e)}"
+            )
+        
+    def regression_multi_linear_model(
+            self,
+        ):
+        try:
+            # Get the data in the folder path
+            # data = pd.read_csv('/home/gaylord/machine_learning_v01/machine_learning/sample_data/Advertising.csv') # gecc laptop 
+            data = pd.read_csv('/mnt/c/Users/Gaylord Carrillo/Documents/develop/machine_learning_regression/machine_learning/sample_data/Advertising.csv') # gecc desktop 
+            X = data.drop(['Newspaper', 'Sales'],axis=1).values   # Array of TV and newspaper data
+            Y = data['Sales'].values                          # Sales data
+
+            # Split the data sample into trainind ans testing data
+            X_train, X_test, Y_train, Y_test = train_test_split(X, Y, test_size=0.2, random_state=42)
+            print(X_train.shape)
+            print(X_test.shape)
+
+            lin_reg = LinearRegression()
+            lin_reg.fit(X_train, Y_train)
+
+            y_predict = lin_reg.predict(X_test)
+
+            print("Predicciones: {}, Reales: {}".format(y_predict[:4], Y_test[:4]))
+
+            # Evaluating the regression model
+            #RMSE
+            rmse = mean_squared_error(Y_test, y_predict, squared=False)
+            print('RMSE:', rmse)
+            # R2
+            r2 = r2_score(Y_test, y_predict)
+            print('R2:', r2)
+
+            results_graphics_path = 'results_graphics'
+            filenames = []
+            plt.figure()  # Crear una nueva figura
+            sns.regplot(x = Y_test, y = y_predict)
+            file_path = os.path.join(results_graphics_path, "plotmultiregression.png")
+            plt.savefig(file_path)
+            plt.close()
+            filenames.append(file_path)
+            # Convert the NumPy array to a list before returning
+            return y_predict.tolist() # Return the prediction as a list
+        except Exception as e:
+            raise HTTPException(
+                status_code=422,
+                detail=f"regression multi linear model: {str(e)}"
+            )
+        
+    def polynomical_regression(self):
+        try:
+            
+            return "Test"
+        except Exception as e:
+            raise HTTPException(
+                status_code=422,
+                detail=f"polynomical regression: {str(e)}"
             )
