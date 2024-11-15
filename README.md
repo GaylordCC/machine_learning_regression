@@ -4,9 +4,6 @@ python3 -m venv venv
 # Activate the virtual enviroment venv
 source venv/bin/activate
 
-# Start the local postgresql database in ubuntu (wsl)
-sudo service postgresql start
-
 # Install the requitement.txt
 pip install -r requirements.txt
 
@@ -17,6 +14,9 @@ uvicorn machine_learning.main:app --reload
 localhost:8000
 localhost:8000/docs
 
+# Build the image and run the container
+docker build -t ml_fastapi .
+docker run --rm -it -p 8000:8000 ml_fastapi
 
 # Create alembic enviroment (run just one)
 alembic init alembic
@@ -34,6 +34,9 @@ alembic upgrade head
 
 # Extra project documentation
 
+# Start the local postgresql database in ubuntu (wsl)
+sudo service postgresql start
+
 # local postgresql database name from the ai_job project
 ai_recruitment
 
@@ -47,3 +50,10 @@ sudo -u postgres psql     # Enter in the postgres enviroment
 
 
 # Extra documentation
+
+# Enter in the image:
+ls
+ls -a
+
+# Resource:
+https://www.youtube.com/watch?v=ED6PRjmXgBA
