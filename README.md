@@ -1,7 +1,7 @@
-# Create the pyton virtual enviroment
+# Create the pyton virtual enviroment in linux/wsl
 python3 -m venv venv
 
-# Activate the virtual enviroment venv
+# Activate the virtual enviroment venv in linux/wsl
 source venv/bin/activate
 
 # Install the requitement.txt
