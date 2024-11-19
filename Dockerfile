@@ -16,4 +16,3 @@ EXPOSE 8000
 
 # Command to start the FastAPI application using Uvicorn
 CMD ["uvicorn", "machine_learning.main:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]
-
