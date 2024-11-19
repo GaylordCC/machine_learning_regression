@@ -23,3 +23,8 @@ def process_request(
 def process_request():
     rmlm_response = MachineLearningService().regression_multi_linear_model()
     return rmlm_response
+
+@router.post('/polynomical-regression')
+def process_request():
+    polynomical_response = MachineLearningService().polynomical_regression()
+    return polynomical_response
