@@ -7,6 +7,7 @@ import seaborn as sns
 from sklearn.linear_model import LinearRegression
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import mean_squared_error, r2_score
+from sklearn.preprocessing import PolynomialFeatures
 
 import os
 
@@ -107,11 +108,11 @@ class MachineLearningService:
         try:
             # Get the data in the folder path
             # data = pd.read_csv('/home/gaylord/machine_learning_v01/machine_learning/sample_data/Advertising.csv') # gecc laptop 
-            data = pd.read_csv('/mnt/c/Users/Gaylord Carrillo/Documents/develop/machine_learning_regression/machine_learning/sample_data/Advertising.csv') # gecc desktop 
+            data = pd.read_csv('/mnt/c/Users/Gaylord Carrillo/Documents/develop/machine_learning_regression/machine_learning/sample_data/Advertising.csv') # gecc desktop
             X = data.drop(['Newspaper', 'Sales'],axis=1).values   # Array of TV and newspaper data
-            Y = data['Sales'].values                          # Sales data
+            Y = data['Sales'].values                              # Sales data
 
-            # Split the data sample into trainind ans testing data
+            # Split the data sample into trainind and testing data
             X_train, X_test, Y_train, Y_test = train_test_split(X, Y, test_size=0.2, random_state=42)
             print(X_train.shape)
             print(X_test.shape)
@@ -149,8 +150,64 @@ class MachineLearningService:
         
     def polynomical_regression(self):
         try:
+            # Data to be use in the polynomical regression
+            pos = [x for x in range(1,11)]
+            post = [
+                "Pasante de Desarrollo",
+                "Desarrollador Junior",
+                "Desarrollador Intermedio",
+                "Desaarrollador Senior",
+                "Lider de Proyecto",
+                "Gerente de Proyecto",
+                "Arquitecto de Software",
+                "Director de Desarrollo",
+                "Director de Tecnologia",
+                "Director Ejecutivo (CEO)",
+            ]
+            salary = [1200, 2500, 4000, 4800, 6500, 9000, 12850, 15000, 25000, 50000]
+            data = {
+                "position": post,
+                "years": pos,
+                "salary": salary
+            }
+            data = pd.DataFrame(data)
+            data.head()
+            print(data)
+            data_dict = data.to_dict(orient="records")
+
+            X = data.iloc[:, 1]. values.reshape(-1,1)
+            Y = data.iloc[:, -1].values
             
-            return "Test"
+            # Linear regression test
+            regression = LinearRegression()
+            regression.fit(X,Y)
+
+            # Polynomical regression test
+            poly = PolynomialFeatures(degree=4)
+            X_poly = poly.fit_transform(X)
+            print(X_poly)
+            regression_poly = LinearRegression()
+            regression_poly.fit(X_poly, Y)
+            # Predict a specific value
+            predic_v = poly.fit_transform([[2]])
+            print(regression_poly.predict(predic_v))
+
+            # Determine R2
+            y_pred = regression_poly.predict(X_poly)
+            print(r2_score(Y, y_pred))
+
+
+            results_graphics_path = 'results_graphics'
+            filenames = []
+            plt.figure()  # Crear una nueva figura
+            plt.scatter(data['years'], data['salary'])
+            # plt.plot(X, regression.predict(X), color="black")
+            plt.plot(X, regression_poly.predict(X_poly), color="black")
+            file_path = os.path.join(results_graphics_path, "polynomicalregression.png")
+            plt.savefig(file_path)
+            plt.close()
+            filenames.append(file_path)
+            return data_dict
         except Exception as e:
             raise HTTPException(
                 status_code=422,
