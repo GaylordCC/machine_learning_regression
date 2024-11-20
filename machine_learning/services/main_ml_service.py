@@ -9,6 +9,7 @@ from sklearn.model_selection import train_test_split
 from sklearn.metrics import mean_squared_error, r2_score
 from sklearn.preprocessing import PolynomialFeatures
 
+from sklearn.svm import SVR
 import os
 
 class MachineLearningService:
@@ -20,7 +21,6 @@ class MachineLearningService:
             # Get the data in the folder path
             # data = pd.read_csv('/home/gaylord/machine_learning_v01/machine_learning/sample_data/Advertising.csv') # gecc laptop 
             data = pd.read_csv('/mnt/c/Users/Gaylord Carrillo/Documents/develop/machine_learning_regression/machine_learning/sample_data/Advertising.csv') # gecc desktop
-
             # Convert DataFrame to a list of dictionaries
             data_dict = data.to_dict(orient="records")
             # Get data information
@@ -32,9 +32,7 @@ class MachineLearningService:
 
             cols = ['TV', 'Radio', 'Newspaper']
             filenames = []
-
             results_graphics_path = 'results_graphics'
-
             for col in cols:
                 plt.plot(data[col], data['Sales'], 'ro')
                 plt.title(f'Ventas respecto a la publicidad en {col}')
@@ -42,7 +40,6 @@ class MachineLearningService:
                 plt.savefig(file_path)
                 plt.close()  # Cierra el gráfico para liberar memoria
                 filenames.append(file_path)
-
 
             return data_dict
         except Exception as e:
@@ -64,7 +61,7 @@ class MachineLearningService:
             X = data[request.column_name].values.reshape(-1,1)   # Reshape 'TV', 'Radio', 'Newspaper' column values into a 2D array
             Y = data['Sales'].values
 
-            # Split the data sample into trainind ans testing data
+            # Split the data sample into trainind and testing data
             X_train, X_test, Y_train, Y_test = train_test_split(X, Y, test_size=0.2, random_state=42)
             print(X_train.shape)
             print(X_test.shape)
@@ -173,9 +170,10 @@ class MachineLearningService:
             data = pd.DataFrame(data)
             data.head()
             print(data)
+            # Convert DataFrame to a list of dictionaries
             data_dict = data.to_dict(orient="records")
 
-            X = data.iloc[:, 1]. values.reshape(-1,1)
+            X = data.iloc[:, 1].values.reshape(-1,1)
             Y = data.iloc[:, -1].values
             
             # Linear regression test
@@ -212,4 +210,38 @@ class MachineLearningService:
             raise HTTPException(
                 status_code=422,
                 detail=f"polynomical regression: {str(e)}"
+            )
+        
+    def svr_regression(self):
+        # Support Vector Regression (SVR)
+        # Support Vector Machine
+        try:
+            # Get the data in the folder path
+            # data = pd.read_csv('/home/gaylord/machine_learning_v01/machine_learning/sample_data/Advertising.csv') # gecc laptop 
+            data = pd.read_csv('/mnt/c/Users/Gaylord Carrillo/Documents/develop/machine_learning_regression/machine_learning/sample_data/Advertising.csv') # gecc desktop 
+            data = data.iloc[:, 1:]
+            # TV and Radio data
+            X = data.drop(['Newspaper', 'Sales'],axis=1).values
+            # Sales data
+            Y = data['Sales'].values
+            # Split the data sample into trainind and testing data
+            X_train, X_test, Y_train, Y_test = train_test_split(X, Y, test_size=0.2, random_state=42)
+            # Intantize
+            svr = SVR(kernel='rbf')
+            # Perform the training
+            svr.fit(X_train, Y_train)
+            #Get the predictions
+            y_predict = svr.predict(X_test)
+            print("Predicciones: {}, Reales: {}".format(y_predict[:4], Y_test[:4]))
+            # Evaulate the model by determine r2_score
+            print(r2_score(Y_test, y_predict))
+            print("*"*10)
+            # Convert DataFrame to a list of dictionaries
+            data_dict = data.to_dict(orient="records")
+
+            return data_dict
+        except Exception as e:
+            raise HTTPException(
+                status_code=422,
+                detail=f"support vector regression: {str(e)}"
             )
