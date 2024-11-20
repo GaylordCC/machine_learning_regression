@@ -33,3 +33,8 @@ def process_request():
 def process_request():
     polynomical_response = MachineLearningService().svr_regression()
     return polynomical_response
+
+@router.post('/tree-regression')
+def process_request():
+    polynomical_response = MachineLearningService().tree_regression()
+    return polynomical_response
