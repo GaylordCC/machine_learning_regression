@@ -212,7 +212,9 @@ class MachineLearningService:
                 detail=f"polynomical regression: {str(e)}"
             )
         
-    def svr_regression(self):
+    def svr_regression(
+            self
+        ):
         # Support Vector Regression (SVR)
         # Support Vector Machine
         try:
