@@ -7,9 +7,10 @@ import seaborn as sns
 from sklearn.linear_model import LinearRegression
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import mean_squared_error, r2_score
-from sklearn.preprocessing import PolynomialFeatures
+from sklearn.preprocessing import PolynomialFeatures, OrdinalEncoder, OneHotEncoder
 
 from sklearn.svm import SVR
+import numpy as np
 import os
 
 class MachineLearningService:
@@ -253,10 +254,50 @@ class MachineLearningService:
     ):
         try:
             # Get the data in the folder path
-            # data = pd.read_csv('/home/gaylord/machine_learning_v01/machine_learning/sample_data/housing.csv') # gecc laptop 
-            data = pd.read_csv('/mnt/c/Users/Gaylord Carrillo/Documents/develop/machine_learning_regression/machine_learning/sample_data/housing.csv') # gecc desktop 
+            data = pd.read_csv('/home/gaylord/machine_learning_v01/machine_learning/sample_data/housing.csv') # gecc laptop
+            # data = pd.read_csv('/mnt/c/Users/Gaylord Carrillo/Documents/develop/machine_learning_regression/machine_learning/sample_data/housing.csv') # gecc desktop 
+            
+            # Filter the data to be used in the corralation analysis
+            data_for_corr = data.drop(['ocean_proximity'], axis=1)
+            # corr_matrix = data_for_corr.corr()
+            # corr_matrix['median_house_value'].sort_values(ascending=False)
+            # print(corr_matrix)
+            # print('#'*50)
+            
             # Get the data information
             data.info()
+            
+            # Attribute combinations
+            data_for_corr['rooms_per_household'] = data_for_corr['total_rooms'] / data_for_corr['households']
+            data_for_corr['bedrooms_per_room'] = data_for_corr['total_bedrooms'] / data_for_corr['households']
+            data_for_corr['population_per_household'] = data_for_corr['population'] / data_for_corr['households']
+            corr_matrix = data_for_corr.corr()
+            corr_matrix['median_house_value'].sort_values(ascending=False)
+            print(corr_matrix)
+            print('#'*50)
+
+            # Clean data and handle categorical attributes
+            # Fill lack data
+            data_for_corr['total_bedrooms'].fillna(data_for_corr['total_bedrooms'].median(), inplace=True)
+            data_for_corr.info()
+            print(data_for_corr)
+            print('X'*50)
+
+            # Manipulation of category data
+            data_ocean = data[['ocean_proximity']]
+            Ordinal_encoder = OrdinalEncoder()
+            data_ocean_encoder = Ordinal_encoder.fit_transform(data_ocean)
+            np.random.choice(data_ocean_encoder.ravel(), size=10)
+            # Manipulation of category data
+            cat_ecoder = OneHotEncoder()
+            data_cat_1hot = cat_ecoder.fit_transform(data_ocean)
+            print(data_cat_1hot.toarray())
+            print('Y'*50)
+            print(cat_ecoder.categories_)
+            # DataFrame with the categorical variables
+            encoded_df = pd.DataFrame(data_cat_1hot.toarray(), columns= cat_ecoder.get_feature_names_out())
+            print(encoded_df.head())
+
             # Create the histograms
             histograms = data.hist(bins=50, figsize=(20,15))
             print(data)
@@ -270,6 +311,14 @@ class MachineLearningService:
             plt.legend()
             plt.savefig(scatter_plot_path)  # Save the scatter plot
             plt.close()  # Close the scatter plot to free up memory
+
+            # Generate correlation plot by heatmap
+            correlation_plot_path = os.path.join(results_graphics_path, "correlation_plot.png")
+            plt.figure(figsize=(20,10))
+            sns.heatmap(data_for_corr.corr(), annot=True)
+            plt.savefig(correlation_plot_path)  # Save the heatmap plot
+            plt.close()  # Close the scatter plot to free up memory
+
 
             # Generate histograms plot
             file_path = os.path.join(results_graphics_path, "histograms.png")
