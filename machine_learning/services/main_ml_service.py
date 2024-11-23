@@ -13,6 +13,8 @@ from sklearn.svm import SVR
 import numpy as np
 import os
 
+from sklearn.preprocessing import StandardScaler
+
 class MachineLearningService:
     def __init__(self):
         pass
@@ -297,6 +299,59 @@ class MachineLearningService:
             # DataFrame with the categorical variables
             encoded_df = pd.DataFrame(data_cat_1hot.toarray(), columns= cat_ecoder.get_feature_names_out())
             print(encoded_df.head())
+
+            # Creating machine learning (ML) algorith
+            y = data_for_corr['median_house_value'].values.reshape(-1,1)
+
+            X = data_for_corr[[
+                'median_income',
+                'rooms_per_household',
+                'total_rooms',
+                'housing_median_age',
+                'households'
+            ]]
+
+            # Concatenate categorical variables
+            data1 = pd.concat([X, encoded_df], axis=1)
+            data1.columns
+            X = data1.values
+            X[:10]
+            
+            # # Multi Linear Regression
+            # X_train, X_test, Y_train, Y_test = train_test_split(X, y, test_size=0.2)
+            # lin_reg = LinearRegression()
+            # # Training
+            # lin_reg.fit(X_train, Y_train)
+            # # Prediction
+            # y_pred = lin_reg.predict(X_test)
+            # # Determine r2
+            # r2 = r2_score(Y_test, y_pred)
+
+            # Scalate the independent variable
+            sc_X = StandardScaler()
+            X = sc_X.fit_transform(X)
+
+            # Multi Linear Regression
+            X_train, X_test, Y_train, Y_test = train_test_split(X, y, test_size=0.2)
+            lin_reg = LinearRegression()
+            # Training
+            lin_reg.fit(X_train, Y_train)
+            # Prediction
+            y_pred = lin_reg.predict(X_test)
+            # Determine r2
+            r2 = r2_score(Y_test, y_pred)
+
+
+            #
+            columnas = ['median_income','rooms_per_household','total_rooms','housing_median_age','households','latitude','longitude']
+            col_modelo = []
+
+            for col in columnas:
+                col_modelo.append(col)
+                data1 = data[col_modelo]
+                data1 = pd.concat([data1, encoded_df], axis=1)
+
+
 
             # Create the histograms
             histograms = data.hist(bins=50, figsize=(20,15))
