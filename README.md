@@ -32,8 +32,6 @@ alembic upgrade head
 
 
 
-# Extra project documentation
-
 # Start the local postgresql database in ubuntu (wsl)
 sudo service postgresql start
 
@@ -51,7 +49,7 @@ sudo -u postgres psql     # Enter in the postgres enviroment
 
 # Extra documentation
 
-# Enter in the image:
+# Enter in the docker image:
 ls
 ls -a
 
