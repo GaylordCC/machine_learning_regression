@@ -4,8 +4,9 @@ from ..schemas import RegressionSchema
 
 
 router = APIRouter(
-    tags = ['Machine Learning']
+    tags = ['Machine Learning Regression Endpoints']
 )
+
 
 @router.post('/machine-learning')
 def process_request():
