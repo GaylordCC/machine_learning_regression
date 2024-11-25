@@ -46,12 +46,7 @@ sudo -u postgres psql     # Enter in the postgres enviroment
 \dt                       # List the existing tables
 
 
-
 # Extra documentation
-
 # Enter in the docker image:
 ls
 ls -a
-
-# Resource:
-https://www.youtube.com/watch?v=ED6PRjmXgBA
