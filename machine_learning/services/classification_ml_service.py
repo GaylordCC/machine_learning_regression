@@ -24,6 +24,7 @@ class ClassificationAlgorithmService:
         digit = X.to_numpy()[0]
         digit_image = digit.reshape(28,28)
 
+        # Generating a plot and storage it
         results_graphics_path = 'results_graphics'
         filenames = []
         plt.imshow(digit_image, cmap='binary')
@@ -32,4 +33,7 @@ class ClassificationAlgorithmService:
         plt.close()  # Cierra el gráfico para liberar memoria
         filenames.append(file_path)
 
+        # Verifying the value teste above
+        Y = Y.astype(np.uint8)
+        print(Y[0])
         return "ok"
