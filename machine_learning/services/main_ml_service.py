@@ -14,6 +14,7 @@ import numpy as np
 import os
 
 from sklearn.preprocessing import StandardScaler
+from sklearn.tree import DecisionTreeRegressor
 
 class MachineLearningService:
     def __init__(self):
@@ -394,4 +395,16 @@ class MachineLearningService:
             raise HTTPException(
                 status_code=422,
                 detail=f" tree regression: {str(e)}"
+            )
+        
+    def random_tree_regression(
+        self      
+    ):
+        try:
+            
+            return "test random tree regression"
+        except Exception as e:
+            raise HTTPException (
+                status_code=422,
+                detail=f"Random tree regression: {(e)}"
             )
