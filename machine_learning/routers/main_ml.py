@@ -48,5 +48,5 @@ def process_request():
 # Endpoint for performing decision random tree regression
 @router.post('/random-tree-regression')
 def process_request():
-    polynomical_response = MachineLearningService().tree_regression()
+    polynomical_response = MachineLearningService().random_tree_regression()
     return polynomical_response
