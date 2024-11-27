@@ -36,17 +36,17 @@ def process_request():
 # Endpoint for performing support vector regression (SVR)
 @router.post('/svr-regression')
 def process_request():
-    polynomical_response = MachineLearningService().svr_regression()
-    return polynomical_response
+    svr_response = MachineLearningService().svr_regression()
+    return svr_response
 
 # Endpoint for performing decision tree regression
 @router.post('/tree-regression')
 def process_request():
-    polynomical_response = MachineLearningService().tree_regression()
-    return polynomical_response
+    tree_response = MachineLearningService().tree_regression()
+    return tree_response
 
 # Endpoint for performing decision random tree regression
 @router.post('/random-tree-regression')
 def process_request():
-    polynomical_response = MachineLearningService().random_tree_regression()
-    return polynomical_response
+    random_tree_response = MachineLearningService().random_tree_regression()
+    return random_tree_response
