@@ -15,6 +15,7 @@ import os
 
 from sklearn.preprocessing import StandardScaler
 from sklearn.tree import DecisionTreeRegressor
+from sklearn.ensemble import RandomForestRegressor
 
 class MachineLearningService:
     def __init__(self):
@@ -460,4 +461,68 @@ class MachineLearningService:
             raise HTTPException (
                 status_code=422,
                 detail=f"Random tree regression: {(e)}"
+            )
+        
+    def random_forest_regression(
+            self
+    ):
+        try:
+            # Get the data in the folder path
+            data = pd.read_csv('/home/gaylord/machine_learning_v01/machine_learning/sample_data/housing.csv') # gecc laptop
+            # data = pd.read_csv('/mnt/c/Users/Gaylord Carrillo/Documents/develop/machine_learning_regression/machine_learning/sample_data/housing.csv') # gecc desktop 
+            # Filter the data to be used in the corralation analysis
+            data_for_corr = data.drop(['ocean_proximity'], axis=1)
+            
+            # Attribute combinations
+            data_for_corr['rooms_per_household'] = data_for_corr['total_rooms'] / data_for_corr['households']
+            data_for_corr['bedrooms_per_room'] = data_for_corr['total_bedrooms'] / data_for_corr['households']
+            data_for_corr['population_per_household'] = data_for_corr['population'] / data_for_corr['households']
+            corr_matrix = data_for_corr.corr()
+            corr_matrix['median_house_value'].sort_values(ascending=False)
+            print(corr_matrix)
+            print('#'*50)
+
+            # Clean data and handle categorical attributes
+            # Fill lack data
+            data_for_corr['total_bedrooms'].fillna(data_for_corr['total_bedrooms'].median(), inplace=True)
+            data_for_corr.info()
+            print(data_for_corr)
+            print('X'*50)
+            # Manipulation of category data
+            data_ocean = data[['ocean_proximity']]
+            Ordinal_encoder = OrdinalEncoder()
+            data_ocean_encoder = Ordinal_encoder.fit_transform(data_ocean)
+            np.random.choice(data_ocean_encoder.ravel(), size=10)
+            # Manipulation of category data
+            cat_ecoder = OneHotEncoder()
+            data_cat_1hot = cat_ecoder.fit_transform(data_ocean)
+            print(data_cat_1hot.toarray())
+            print('Y'*50)
+            print(cat_ecoder.categories_)
+            # DataFrame with the categorical variables
+            encoded_df = pd.DataFrame(data_cat_1hot.toarray(), columns= cat_ecoder.get_feature_names_out())
+            #
+            columnas = ['median_income','rooms_per_household','total_rooms','housing_median_age','households','latitude','longitude']
+            col_modelo = []
+            y = data_for_corr['median_house_value'].values
+            
+            for col in columnas:
+                col_modelo.append(col)
+                data1 = data_for_corr[col_modelo]
+                data1 = pd.concat([data1, encoded_df], axis=1)
+                X = data1.values
+                X_train, X_test, Y_train, Y_test = train_test_split(X, y, test_size=0.2)
+                forest_reg = RandomForestRegressor()
+                # Training
+                forest_reg.fit(X_train, Y_train)
+                # Prediction
+                y_pred = forest_reg.predict(X_test)
+                # Determine r2
+                r2 = r2_score(Y_test, y_pred)
+                print('Columnas:', col_modelo, 'Calificacion', r2)
+            return "Test random forest regression"
+        except Exception as e:
+            raise HTTPException (
+                status_code=422,
+                detail=f"Random forest regression: {(e)}"
             )
