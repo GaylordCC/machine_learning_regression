@@ -45,8 +45,14 @@ def process_request():
     tree_response = MachineLearningService().tree_regression()
     return tree_response
 
-# Endpoint for performing decision random tree regression
+# Endpoint for performing random tree regression
 @router.post('/random-tree-regression')
 def process_request():
     random_tree_response = MachineLearningService().random_tree_regression()
     return random_tree_response
+
+# Endpoint for performing random forest regression
+@router.post('/random-forest-regression')
+def process_request():
+    random_forest_response = MachineLearningService().random_forest_regression()
+    return random_forest_response
