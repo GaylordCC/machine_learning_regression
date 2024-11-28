@@ -7,7 +7,7 @@ router = APIRouter(
     tags = ['Machine Learning Classification Endpoints']
 )
 
-
+# Endpoint to implement classifiction ml algorithm
 @router.post('/classification-algorithm')
 def process_request():
     
