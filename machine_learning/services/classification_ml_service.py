@@ -20,7 +20,7 @@ class ClassificationAlgorithmService:
         X, Y = mnist['data'], mnist['target']
         print(X.shape)
         print(Y.shape)
-        # 
+        # Convert X data into numpy array
         digit = X.to_numpy()[0]
         digit_image = digit.reshape(28,28)
 
