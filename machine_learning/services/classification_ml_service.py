@@ -4,6 +4,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from sklearn.datasets import fetch_openml
 from sklearn.linear_model import SGDClassifier
+from sklearn.model_selection import cross_val_score
 
 import os
 
@@ -45,5 +46,11 @@ class ClassificationAlgorithmService:
         # SGDC Classifier (Algorithm)
         sgd_classifier = SGDClassifier(random_state=42)
         sgd_classifier.fit(X_train, Y_train_5)
+
+        # 
+        print(sgd_classifier.predict([digit]))
+
+        # Medir el rendiemiento del modelo
+        print(cross_val_score(sgd_classifier, X_train, Y_train_5, cv=3, scoring='accuracy'))
 
         return "ok"
