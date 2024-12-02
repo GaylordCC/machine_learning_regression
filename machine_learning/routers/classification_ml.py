@@ -10,5 +10,9 @@ router = APIRouter(
 # Endpoint to implement classifiction ml algorithm
 @router.post('/classification-algorithm')
 def process_request():
-    
     return ClassificationAlgorithmService().handle_classification_image()
+
+# Endpoint to implement logistic regression classifiction algorithm
+@router.post('/logistic-regression-classification')
+def process_request():
+    return ClassificationAlgorithmService().handle_logistic_classification()
