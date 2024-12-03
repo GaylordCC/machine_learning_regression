@@ -48,13 +48,13 @@ class ClassificationAlgorithmService:
         sgd_classifier = SGDClassifier(random_state=42)
         sgd_classifier.fit(X_train, Y_train_5)
 
-        # corroborar con sgdc que el numero precido arriba si es el 5
+        # Check with sgdc that the number above is 5
         print(sgd_classifier.predict([digit]))
 
-        # Medir el rendiemiento del modelo
+        # Measuring model performance
         print(cross_val_score(sgd_classifier, X_train, Y_train_5, cv=3, scoring='accuracy'))
 
-        # Matriz de confusión:
+        # Confusion array:
         # [
         # TN"True-Negative": algotritmo dijo que no era 5, y estaba correcta, FP"False-Positive": algorimot dijo que eran 5, y se equivoco,
         # FN"False-Negative": algoritmo dijo que no eran 5, y se equivoco, TP"True-Positive": algoritmo dijo que era 5, y estaba correcto
@@ -62,11 +62,11 @@ class ClassificationAlgorithmService:
         Y_train_predict = cross_val_predict(sgd_classifier, X_train, Y_train_5, cv=3)
         print(confusion_matrix(Y_train_5, Y_train_predict))
 
-        # Precision: TP/(TP+FP)
+        # Accuracy: TP/(TP+FP)
         print(precision_score(Y_train_5, Y_train_predict))
-        # Memoria, recall: TP/(TP+FN)
+        # Memory, recall: TP/(TP+FN)
         print(recall_score(Y_train_5, Y_train_predict))
 
-        # F1: 
+        # F1 score evaluation: 
         print(f1_score(Y_train_5, Y_train_predict))
         return "ok"
