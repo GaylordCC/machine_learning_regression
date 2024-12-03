@@ -68,7 +68,7 @@ class ClassificationAlgorithmService:
         # Memory, recall: TP/(TP+FN)
         print(recall_score(Y_train_5, Y_train_predict))
 
-        # F1 score evaluation: 
+        # F1 score evaluation 
         print(f1_score(Y_train_5, Y_train_predict))
         return "successfully image classification"
     
