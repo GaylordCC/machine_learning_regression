@@ -3,10 +3,10 @@ import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 from sklearn.datasets import fetch_openml
-from sklearn.linear_model import SGDClassifier
+from sklearn.linear_model import SGDClassifier, LogisticRegression
 from sklearn.model_selection import cross_val_score, cross_val_predict, train_test_split
 from sklearn.metrics import confusion_matrix, precision_score, recall_score, f1_score
-from sklearn.preprocessing import OneHotEncoder
+from sklearn.preprocessing import OneHotEncoder, StandardScaler
 
 import os
 
@@ -55,7 +55,7 @@ class ClassificationAlgorithmService:
         # Measuring model performance
         print(cross_val_score(sgd_classifier, X_train, Y_train_5, cv=3, scoring='accuracy'))
 
-        # Confusion array:
+        # Confusion matrix:
         # [
         # TN"True-Negative": algotritmo dijo que no era 5, y estaba correcta, FP"False-Positive": algorimot dijo que eran 5, y se equivoco,
         # FN"False-Negative": algoritmo dijo que no eran 5, y se equivoco, TP"True-Positive": algoritmo dijo que era 5, y estaba correcto
@@ -75,7 +75,8 @@ class ClassificationAlgorithmService:
     def handle_logistic_classification(
         self
     ):
-        data = pd.read_csv('/home/gaylord/machine_learning_v01/machine_learning/sample_data/Social_Network_Ads.csv') # gecc laptop
+        # data = pd.read_csv('/home/gaylord/machine_learning_v01/machine_learning/sample_data/Social_Network_Ads.csv') # gecc laptop
+        data = pd.read_csv('/mnt/c/Users/Gaylord Carrillo/Documents/develop/machine_learning_regression/machine_learning/sample_data/Social_Network_Ads.csv') # gecc desktop
         
         # Get data information
         print(data.info())
@@ -115,7 +116,34 @@ class ClassificationAlgorithmService:
         print(X_test.shape)
 
         # Scalate the data, to reduce the big difference between them
+        sc_X = StandardScaler()
+        X_train = sc_X.fit_transform(X_train)
+        X_test = sc_X.fit_transform(X_test)
+        print(X_train)
+        print(X_test)
+
+        # New training of the model
+        log_reg = LogisticRegression(random_state=0)
+        log_reg.fit(X_train, Y_train)
+
+        # Make some data prediction
+        y_pred = log_reg.predict(X_test)
+        print('Reales:', Y_test[:15], 'Prediction:', y_pred[:15])
+
+        # Generatin the confusion matrix
+        # [
+        # TN"True-Negative": algotritmo dijo que no era #, y estaba correcta, FP"False-Positive": algorimot dijo que eran #, y se equivoco,
+        # FN"False-Negative": algoritmo dijo que no eran #, y se equivoco, TP"True-Positive": algoritmo dijo que era #, y estaba correcto
+        #]
+        print(confusion_matrix(Y_test, y_pred))
+
+        # Evaluatind the model performance
+        # Accuracy: TP/(TP+FP)
+        print('Precision:', precision_score(Y_test, y_pred))
+        # Memory, recall: TP/(TP+FN)
+        print('Memory:', recall_score(Y_test, y_pred))
+        # F1 score evaluation: evaluate accurancy + memory
+        print('F1_score:', f1_score(Y_test, y_pred))
 
 
-        
         return "successfully logistic classification"
