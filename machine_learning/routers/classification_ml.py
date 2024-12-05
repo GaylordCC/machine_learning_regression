@@ -16,3 +16,8 @@ def process_request():
 @router.post('/logistic-regression-classification')
 def process_request():
     return ClassificationAlgorithmService().handle_logistic_classification()
+
+# Endpoint to implement K-NN (K nearest neighbors) classifiction algorithm
+@router.post('/logistic-regression-classification')
+def process_request():
+    return ClassificationAlgorithmService().handle_knn_classification()
