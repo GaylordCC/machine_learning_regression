@@ -147,3 +147,10 @@ class ClassificationAlgorithmService:
 
 
         return "successfully logistic classification"
+    
+
+    def handle_knn_classification(
+        self
+    ):
+        
+        return "successfully knn classification"
