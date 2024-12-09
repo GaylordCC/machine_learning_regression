@@ -17,6 +17,7 @@ class ClassificationAlgorithmService:
     def handle_classification_image(
         self
     ):
+        # Donwload data from openml
         mnist = fetch_openml('mnist_784', version=1)
         print(mnist.keys())
 
