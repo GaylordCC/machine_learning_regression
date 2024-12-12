@@ -202,7 +202,7 @@ class MachineLearningService:
 
             results_graphics_path = 'results_graphics'
             filenames = []
-            plt.figure()  # Crear una nueva figura
+            plt.figure()  # create a new figure
             plt.scatter(data['years'], data['salary'])
             # plt.plot(X, regression.predict(X), color="black")
             plt.plot(X, regression_poly.predict(X_poly), color="black")
