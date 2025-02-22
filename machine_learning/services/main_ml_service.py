@@ -109,8 +109,8 @@ class MachineLearningService:
         ):
         try:
             # Get the data in the folder path
-            # data = pd.read_csv('/home/gaylord/machine_learning_v01/machine_learning/sample_data/Advertising.csv') # gecc laptop 
-            data = pd.read_csv('/mnt/c/Users/Gaylord Carrillo/Documents/develop/machine_learning_regression/machine_learning/sample_data/Advertising.csv') # gecc desktop
+            # data = pd.read_csv('/home/gaylord/machine_learning_v01/machine_learning/sample_data/Advertising.csv') # GECC Laptop 
+            data = pd.read_csv('/mnt/c/Users/Gaylord Carrillo/Documents/develop/machine_learning_regression/machine_learning/sample_data/Advertising.csv') # GECC Desktop
             X = data.drop(['Newspaper', 'Sales'],axis=1).values   # Array of TV and newspaper data
             Y = data['Sales'].values                              # Sales data
 
