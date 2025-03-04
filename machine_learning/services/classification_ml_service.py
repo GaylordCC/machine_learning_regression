@@ -147,12 +147,10 @@ class ClassificationAlgorithmService:
         # F1 score evaluation: evaluate accurancy + memory
         print('F1_score:', f1_score(Y_test, y_pred))
 
-
         return "successfully logistic classification"
     
 
     def handle_knn_classification(
         self
     ):
-        
         return "successfully knn classification"
