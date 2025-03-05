@@ -79,14 +79,12 @@ class ClassificationAlgorithmService:
         # Get the data from the source
         # data = pd.read_csv('/home/gaylord/machine_learning_v01/machine_learning/sample_data/Social_Network_Ads.csv') # gecc laptop
         data = pd.read_csv('/mnt/c/Users/Gaylord Carrillo/Documents/develop/machine_learning_regression/machine_learning/sample_data/Social_Network_Ads.csv') # gecc desktop
-        
         # Get data information
         print(data.info())
         # Get data description
         print(data.describe())
         # Retrieved column names
         print(data.columns)
-
         # Extract de column data
         X = data.iloc[:, [2,3]]
         Y = data.iloc[:, -1].values
