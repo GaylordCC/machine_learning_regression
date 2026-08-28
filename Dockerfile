@@ -19,8 +19,8 @@ COPY . .
 RUN useradd --create-home appuser && chown -R appuser:appuser /app
 USER appuser
 
-# Expose port 8000, which is the default port for Uvicorn
-EXPOSE 8000
+# Expose the port the app listens on (see CMD below)
+EXPOSE 8080
 
 # Command to start the FastAPI application using Uvicorn
-CMD ["uvicorn", "machine_learning.main:app", "--host", "0.0.0.0", "--port", "8000"]
+CMD ["uvicorn", "machine_learning.main:app", "--host", "0.0.0.0", "--port", "8080"]
