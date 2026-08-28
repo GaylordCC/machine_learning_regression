@@ -1,1 +1,22 @@
+# Virtual environment
 venv/
+.venv/
+
+# Version control
+.git/
+.gitignore
+
+# Secrets - never bake these into the image
+.env
+
+# Python cache/bytecode
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+.mypy_cache/
+
+# Docs and IDE files
+README.md
+CLAUDE.md
+.idea/
