@@ -1,9 +1,20 @@
+import matplotlib
+matplotlib.use("Agg")  # non-interactive backend: a server has no display, and the default
+                        # backend can crash the process when it tries to use one (see tests/).
+
 from fastapi import FastAPI
-from .routers import main_ml, classification_ml
 
-# Create an instance of the FastAPI app
-app = FastAPI()
+from .routers import regression, classification
 
-# Include the router
-app.include_router(main_ml.router)
-app.include_router(classification_ml.router)
+app = FastAPI(
+    title="Machine Learning Study API",
+    description="API de estudio con endpoints de regresion y clasificacion basados en scikit-learn.",
+)
+
+app.include_router(regression.router)
+app.include_router(classification.router)
+
+
+@app.get("/health", tags=["Health"])
+def health_check():
+    return {"status": "ok"}
