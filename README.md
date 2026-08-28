@@ -18,13 +18,13 @@ pip install -r requirements.txt
 ## Run the server
 
 ```bash
-uvicorn machine_learning.main:app --reload
+uvicorn machine_learning.main:app --reload --port 8080
 ```
 
 Open the project in the browser:
 
-- http://localhost:8000
-- http://localhost:8000/docs
+- http://localhost:8080
+- http://localhost:8080/docs
 
 ## Docker
 
@@ -33,7 +33,7 @@ Open the project in the browser:
 docker build -t ml_fastapi .
 
 # Run the container
-docker run --rm -it -p 8000:8000 ml_fastapi
+docker run --rm -it -p 8080:8080 ml_fastapi
 ```
 
 Useful commands inside the container:
