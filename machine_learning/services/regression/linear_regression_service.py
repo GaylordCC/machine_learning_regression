@@ -9,7 +9,7 @@ import seaborn as sns
 
 from sklearn.linear_model import LinearRegression
 from sklearn.model_selection import train_test_split
-from sklearn.metrics import mean_squared_error, r2_score
+from sklearn.metrics import root_mean_squared_error, r2_score
 
 from ...core.paths import sample_data_path, results_graphics_path
 from ...schemas import RegressionSchema
@@ -50,7 +50,7 @@ class LinearRegressionService:
             lin_reg.fit(X_train, Y_train)
             y_predict = lin_reg.predict(X_test)
 
-            rmse = mean_squared_error(Y_test, y_predict, squared=False)
+            rmse = root_mean_squared_error(Y_test, y_predict)
             r2 = r2_score(Y_test, y_predict)
             print(f"RMSE: {rmse}, R2: {r2}")
 
@@ -81,7 +81,7 @@ class LinearRegressionService:
             lin_reg.fit(X_train, Y_train)
             y_predict = lin_reg.predict(X_test)
 
-            rmse = mean_squared_error(Y_test, y_predict, squared=False)
+            rmse = root_mean_squared_error(Y_test, y_predict)
             r2 = r2_score(Y_test, y_predict)
             print(f"RMSE: {rmse}, R2: {r2}")
 
