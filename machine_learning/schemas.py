@@ -33,7 +33,10 @@ class TreeRegressionSchema(BaseModel):
 
 
 class RandomForestRegressionSchema(BaseModel):
-    n_estimators: int = Field(default=100, ge=1, le=500)
+    n_estimators: int = Field(
+        default=50, ge=1, le=500,
+        description="Cantidad de arboles. Valores altos tardan mucho: 100 toma ~45-50s en este endpoint.",
+    )
     max_depth: Optional[int] = Field(default=None, ge=1)
 
 
