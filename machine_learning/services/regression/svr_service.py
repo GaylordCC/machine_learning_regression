@@ -9,7 +9,7 @@ import pandas as pd
 
 from sklearn.svm import SVR
 from sklearn.model_selection import train_test_split
-from sklearn.metrics import r2_score, mean_squared_error
+from sklearn.metrics import r2_score, root_mean_squared_error
 from sklearn.preprocessing import StandardScaler
 
 from ...core.paths import sample_data_path
@@ -44,7 +44,7 @@ class SvrRegressionService:
             y_predict = sc_Y.inverse_transform(y_predict_scaled.reshape(-1, 1)).ravel()
 
             r2 = r2_score(Y_test, y_predict)
-            rmse = mean_squared_error(Y_test, y_predict, squared=False)
+            rmse = root_mean_squared_error(Y_test, y_predict)
             print(f"SVR kernel={request.kernel.value} R2: {r2}, RMSE: {rmse}")
 
             return {
