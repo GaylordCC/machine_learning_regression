@@ -4,6 +4,8 @@ See documentacion/08-clasificacion-mnist-y-metricas.md for the theory.
 Downloads MNIST from OpenML on first run (requires internet access);
 scikit-learn caches it locally afterwards.
 """
+import socket
+
 from fastapi import HTTPException
 import numpy as np
 import matplotlib.pyplot as plt
@@ -15,11 +17,26 @@ from sklearn.metrics import confusion_matrix, precision_score, recall_score, f1_
 
 from ...core.paths import results_graphics_path
 
+# fetch_openml has no timeout parameter in its public API (verified: only
+# n_retries/delay, which bound retry count but not per-attempt wall time).
+# socket.setdefaulttimeout is the only real lever, but it's process-global,
+# not thread-local -- a concurrent request using sockets elsewhere in the
+# process during this window would also be bound by it. Acceptable trade-off
+# for a low-concurrency study API; would need a real per-call timeout
+# mechanism (e.g. a subprocess or asyncio.wait_for around a thread) before
+# this app ever runs under real concurrent load.
+OPENML_FETCH_TIMEOUT_SECONDS = 30
+
 
 class ImageClassificationService:
     def handle_classification_image(self):
         try:
-            mnist = fetch_openml("mnist_784", version=1)
+            previous_timeout = socket.getdefaulttimeout()
+            socket.setdefaulttimeout(OPENML_FETCH_TIMEOUT_SECONDS)
+            try:
+                mnist = fetch_openml("mnist_784", version=1)
+            finally:
+                socket.setdefaulttimeout(previous_timeout)
             X, Y = mnist["data"], mnist["target"]
             Y = Y.astype(np.uint8)
 
