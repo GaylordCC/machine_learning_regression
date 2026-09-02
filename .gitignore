@@ -121,3 +121,8 @@ Scripts/
 # Ignorar el archivo requirements.txt
 Scriptsactivate.bat
 
+# results_graphics/ ahora genera un PNG con nombre único por request (ver
+# services/shared/plotting.py) -- ya no hay "un" archivo canónico por técnica
+# que tenga sentido versionar; se acumularían para siempre en el historial.
+results_graphics/*.png
+
