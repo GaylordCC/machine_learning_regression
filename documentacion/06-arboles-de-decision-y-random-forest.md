@@ -86,22 +86,22 @@ Vas a notar, por ejemplo, que `median_income` sola ya explica una buena parte de
 
 ## 6.3 Los tres modelos que se entrenan sobre este mismo pipeline
 
-### `housing_linear_regression` (`POST /housing-linear-regression`) → Regresión Lineal
+### `housing_linear_regression` (`POST /v1/housing-linear-regression`) → Regresión Lineal
 Usa `LinearRegression()` como línea base (baseline): antes de probar modelos más complejos, es buena práctica saber qué tan bien funciona el modelo más simple posible. También genera los tres gráficos exploratorios (§6.4).
 
-### `decision_tree_regression` (`POST /decision-tree-regression`) → Árbol de Decisión
+### `decision_tree_regression` (`POST /v1/decision-tree-regression`) → Árbol de Decisión
 
 **Teoría**: un árbol de decisión divide el espacio de datos en regiones haciendo preguntas tipo "¿`median_income` > 5.2?" de forma recursiva, hasta llegar a hojas donde predice el promedio de `Y` de los ejemplos que cayeron ahí. A diferencia de la regresión lineal, puede capturar relaciones **no lineales** y no necesita escalado de variables (no le importa que `total_rooms` esté en miles y `latitude` en decenas — solo compara valores dentro de la misma columna).
 
 **Riesgo**: un árbol sin restricciones (sin `max_depth`) tiende a **overfitting** severo — puede crecer hasta tener una hoja por cada ejemplo de entrenamiento, memorizando el dataset. El endpoint ahora acepta `max_depth` en el body (`TreeRegressionSchema`, default `None` = sin límite):
 
 ```bash
-curl -X POST http://localhost:8080/decision-tree-regression -H "Content-Type: application/json" -d '{"max_depth": 8}'
+curl -X POST http://localhost:8080/v1/decision-tree-regression -H "Content-Type: application/json" -d '{"max_depth": 8}'
 ```
 
 Compara el `r2_score` del último paso (`scores_by_columns[-1]`) con `max_depth=None` vs `max_depth=8` vs `max_depth=3` — vas a ver el trade-off underfitting/overfitting directamente en los números.
 
-### `random_forest_regression` (`POST /random-forest-regression`) → Random Forest
+### `random_forest_regression` (`POST /v1/random-forest-regression`) → Random Forest
 
 **Teoría**: en vez de un solo árbol, entrena **muchos árboles** (`n_estimators`, default 100), cada uno sobre una muestra aleatoria distinta de los datos (y de las features en cada división) — técnica llamada ***bagging*** (Bootstrap Aggregating). La predicción final es el **promedio** de las predicciones de todos los árboles.
 
@@ -110,7 +110,7 @@ Compara el `r2_score` del último paso (`scores_by_columns[-1]`) con `max_depth=
 El endpoint acepta `n_estimators` y `max_depth` (`RandomForestRegressionSchema`):
 
 ```bash
-curl -X POST http://localhost:8080/random-forest-regression -H "Content-Type: application/json" -d '{"n_estimators": 50, "max_depth": 10}'
+curl -X POST http://localhost:8080/v1/random-forest-regression -H "Content-Type: application/json" -d '{"n_estimators": 50, "max_depth": 10}'
 ```
 
 **Comparación verificada en este proyecto** (usando todas las columnas, `n_estimators=50`): `R²` Random Forest ≈ **0.81**, Árbol de decisión (`max_depth=6`) ≈ **0.66**, Regresión lineal ≈ **0.60** — el orden esperado se cumple: `RandomForest > DecisionTree > LinearRegression`, porque Random Forest combina la capacidad de capturar no-linealidad (como el árbol) con menor varianza (por el promediado).
