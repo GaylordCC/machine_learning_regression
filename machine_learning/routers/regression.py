@@ -12,7 +12,7 @@ from ..schemas import (
     RandomForestRegressionSchema,
 )
 
-router = APIRouter(tags=["Machine Learning Regression Endpoints"])
+router = APIRouter(prefix="/v1", tags=["Machine Learning Regression Endpoints"])
 
 
 @router.post("/machine-learning")
