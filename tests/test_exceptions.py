@@ -17,7 +17,7 @@ def test_invalid_training_data_error_maps_to_422_with_its_message(client):
         "machine_learning.services.classification.knn_service.KnnService.handle_knn_classification",
         side_effect=InvalidTrainingDataError("n_neighbors=5 is not valid for this dataset"),
     ):
-        response = client.post("/knn-classification", json={"n_neighbors": 5})
+        response = client.post("/v1/knn-classification", json={"n_neighbors": 5})
     assert response.status_code == 422
     assert response.json()["detail"] == "n_neighbors=5 is not valid for this dataset"
 
@@ -28,7 +28,7 @@ def test_upstream_service_error_maps_to_503_with_its_message(client):
         "ImageClassificationService.handle_classification_image",
         side_effect=UpstreamServiceError("Could not fetch MNIST from OpenML: timed out"),
     ):
-        response = client.post("/classification-algorithm")
+        response = client.post("/v1/classification-algorithm")
     assert response.status_code == 503
     assert response.json()["detail"] == "Could not fetch MNIST from OpenML: timed out"
 
@@ -44,7 +44,7 @@ def test_unexpected_error_maps_to_500_without_leaking_the_exception_message():
         "LinearRegressionService.regression_linear_model",
         side_effect=RuntimeError("some internal bug, path=/etc/passwd"),
     ):
-        response = no_raise_client.post("/linear-regression", json={"column_name": "TV"})
+        response = no_raise_client.post("/v1/linear-regression", json={"column_name": "TV"})
     assert response.status_code == 500
     body = response.json()
     assert body["detail"] == "Internal server error"
