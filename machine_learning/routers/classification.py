@@ -5,7 +5,7 @@ from ..services.classification.logistic_regression_service import LogisticRegres
 from ..services.classification.knn_service import KnnService
 from ..schemas import KnnClassificationSchema
 
-router = APIRouter(tags=["Machine Learning Classification Endpoints"])
+router = APIRouter(prefix="/v1", tags=["Machine Learning Classification Endpoints"])
 
 
 @router.post("/classification-algorithm")
