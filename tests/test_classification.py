@@ -1,4 +1,29 @@
+from unittest.mock import patch
+
+import numpy as np
 import pytest
+
+from machine_learning.core.exceptions import InvalidTrainingDataError
+from machine_learning.schemas import KnnClassificationSchema
+from machine_learning.services.classification.knn_service import KnnService
+
+
+def test_knn_raises_invalid_training_data_error_when_n_neighbors_exceeds_available_samples():
+    """n_neighbors is schema-bounded to 1-50 (well under this dataset's real size),
+    so this can't happen through the live endpoint -- but sklearn raises this
+    ValueError for real whenever it does, so the mapping needs its own test."""
+    tiny_split = (
+        np.array([[0, 0], [1, 1]]),  # X_train: 2 samples
+        np.array([[0.5, 0.5]]),      # X_test
+        np.array([0, 1]),            # Y_train
+        np.array([1]),               # Y_test
+    )
+    with patch(
+        "machine_learning.services.classification.knn_service.prepare_train_test_split",
+        return_value=tiny_split,
+    ):
+        with pytest.raises(InvalidTrainingDataError):
+            KnnService().handle_knn_classification(KnnClassificationSchema(n_neighbors=5))
 
 
 def test_logistic_regression_classification(client):
