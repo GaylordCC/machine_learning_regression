@@ -117,9 +117,11 @@ curl -X POST http://localhost:8080/random-forest-regression -H "Content-Type: ap
 
 ## 6.4 Gráficos generados (solo en `housing_linear_regression`)
 
-- `scatter_plot.png`: mapa de California donde cada punto es una vivienda, coloreado por `median_house_value` y con tamaño proporcional a `population` — permite *ver* geográficamente dónde están las zonas caras.
-- `correlation_plot.png`: heatmap de la matriz de correlación (paso 4, pero visual).
-- `histograms.png`: distribución de cada variable numérica — útil para detectar asimetrías, outliers o columnas con "topes" artificiales (ej. `median_house_value` suele tener un pico en el valor máximo por censura de datos en el dataset original).
+La respuesta trae `plot_files` con el nombre real de cada archivo generado (uno único por request, dentro de `results_graphics/`):
+
+- `plot_files.scatter_plot` (ej. `scatter_plot_20260901_a1b2c3d4.png`): mapa de California donde cada punto es una vivienda, coloreado por `median_house_value` y con tamaño proporcional a `population` — permite *ver* geográficamente dónde están las zonas caras.
+- `plot_files.correlation_plot`: heatmap de la matriz de correlación (paso 4, pero visual).
+- `plot_files.histograms`: distribución de cada variable numérica — útil para detectar asimetrías, outliers o columnas con "topes" artificiales (ej. `median_house_value` suele tener un pico en el valor máximo por censura de datos en el dataset original).
 
 ## 6.5 Para seguir practicando
 
