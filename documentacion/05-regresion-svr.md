@@ -31,7 +31,7 @@ El kernel `rbf` funciona midiendo qué tan "cerca" está un punto nuevo de los p
 
 ## 5.3 Código en este proyecto
 
-📍 `machine_learning/services/regression/svr_service.py` · Endpoint: `POST /svr-regression` · body opcional: `{"kernel": "rbf" | "linear" | "poly"}`
+📍 `machine_learning/services/regression/svr_service.py` · Endpoint: `POST /v1/svr-regression` · body opcional: `{"kernel": "rbf" | "linear" | "poly"}`
 
 ```python
 X_train, X_test, Y_train, Y_test = train_test_split(X, Y, test_size=0.2, random_state=42)
@@ -64,8 +64,8 @@ Nota que además de escalar `X`, aquí también se escala `Y` (algo que no hace 
 El endpoint acepta `kernel` en el body (`linear`, `poly` o `rbf`, default `rbf`) vía `SvrRegressionSchema` (`machine_learning/schemas.py`). Pruébalo:
 
 ```bash
-curl -X POST http://localhost:8080/svr-regression -H "Content-Type: application/json" -d '{"kernel": "linear"}'
-curl -X POST http://localhost:8080/svr-regression -H "Content-Type: application/json" -d '{"kernel": "rbf"}'
+curl -X POST http://localhost:8080/v1/svr-regression -H "Content-Type: application/json" -d '{"kernel": "linear"}'
+curl -X POST http://localhost:8080/v1/svr-regression -H "Content-Type: application/json" -d '{"kernel": "rbf"}'
 ```
 
 Compara el `r2_score` de ambas respuestas: ¿la relación entre publicidad y ventas es realmente no lineal, o un kernel lineal ya es suficiente?
