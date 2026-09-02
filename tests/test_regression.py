@@ -59,7 +59,7 @@ def test_random_forest_default_n_estimators_is_kept_low_for_latency():
 
 
 def test_exploratory_analysis_returns_advertising_records(client):
-    response = client.post("/machine-learning")
+    response = client.post("/v1/machine-learning")
     assert response.status_code == 200
     body = response.json()
     assert isinstance(body, list)
@@ -68,7 +68,7 @@ def test_exploratory_analysis_returns_advertising_records(client):
 
 
 def test_linear_regression_returns_predictions_and_metrics(client):
-    response = client.post("/linear-regression", json={"column_name": "TV"})
+    response = client.post("/v1/linear-regression", json={"column_name": "TV"})
     assert response.status_code == 200
     body = response.json()
     assert len(body["predictions"]) > 0
@@ -80,8 +80,8 @@ def test_linear_regression_returns_predictions_and_metrics(client):
 def test_linear_regression_plot_file_differs_per_column(client):
     """Two different columns must not collide on the same plot filename --
     the old fixed "plotregression.png" name did exactly this."""
-    tv_body = client.post("/linear-regression", json={"column_name": "TV"}).json()
-    radio_body = client.post("/linear-regression", json={"column_name": "Radio"}).json()
+    tv_body = client.post("/v1/linear-regression", json={"column_name": "TV"}).json()
+    radio_body = client.post("/v1/linear-regression", json={"column_name": "Radio"}).json()
     assert tv_body["plot_file"] != radio_body["plot_file"]
     assert "TV" in tv_body["plot_file"]
     assert "Radio" in radio_body["plot_file"]
@@ -92,18 +92,18 @@ def test_linear_regression_does_not_use_deprecated_squared_param(client):
     sklearn 1.4 and removed in 1.6 — root_mean_squared_error replaces it."""
     with warnings.catch_warnings(record=True) as caught:
         warnings.simplefilter("always")
-        response = client.post("/linear-regression", json={"column_name": "TV"})
+        response = client.post("/v1/linear-regression", json={"column_name": "TV"})
     assert response.status_code == 200
     assert not any("squared" in str(w.message) for w in caught)
 
 
 def test_linear_regression_rejects_unknown_column(client):
-    response = client.post("/linear-regression", json={"column_name": "not-a-column"})
+    response = client.post("/v1/linear-regression", json={"column_name": "not-a-column"})
     assert response.status_code == 422
 
 
 def test_multi_linear_regression_returns_predictions_and_metrics(client):
-    response = client.post("/multi-linear-regression")
+    response = client.post("/v1/multi-linear-regression")
     assert response.status_code == 200
     body = response.json()
     assert len(body["predictions"]) > 0
@@ -112,7 +112,7 @@ def test_multi_linear_regression_returns_predictions_and_metrics(client):
 
 
 def test_svr_regression_returns_predictions_and_metrics(client):
-    response = client.post("/svr-regression", json={})
+    response = client.post("/v1/svr-regression", json={})
     assert response.status_code == 200
     body = response.json()
     assert body["kernel"] == "rbf"
@@ -123,13 +123,13 @@ def test_svr_regression_returns_predictions_and_metrics(client):
 def test_svr_regression_does_not_use_deprecated_squared_param(client):
     with warnings.catch_warnings(record=True) as caught:
         warnings.simplefilter("always")
-        response = client.post("/svr-regression", json={})
+        response = client.post("/v1/svr-regression", json={})
     assert response.status_code == 200
     assert not any("squared" in str(w.message) for w in caught)
 
 
 def test_housing_linear_regression_returns_a_score_per_incremental_column_set(client):
-    response = client.post("/housing-linear-regression")
+    response = client.post("/v1/housing-linear-regression")
     assert response.status_code == 200
     body = response.json()
     assert body["model"] == "linear_regression"
@@ -140,7 +140,7 @@ def test_housing_linear_regression_returns_a_score_per_incremental_column_set(cl
 
 
 def test_decision_tree_regression_returns_a_score_per_incremental_column_set(client):
-    response = client.post("/decision-tree-regression", json={"max_depth": 6})
+    response = client.post("/v1/decision-tree-regression", json={"max_depth": 6})
     assert response.status_code == 200
     body = response.json()
     assert body["model"] == "decision_tree"
@@ -149,7 +149,7 @@ def test_decision_tree_regression_returns_a_score_per_incremental_column_set(cli
 
 
 def test_random_forest_regression_returns_a_score_per_incremental_column_set(client):
-    response = client.post("/random-forest-regression", json={"n_estimators": 5, "max_depth": 6})
+    response = client.post("/v1/random-forest-regression", json={"n_estimators": 5, "max_depth": 6})
     assert response.status_code == 200
     body = response.json()
     assert body["model"] == "random_forest"
