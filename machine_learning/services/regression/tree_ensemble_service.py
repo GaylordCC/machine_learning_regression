@@ -5,9 +5,7 @@ encoding pipeline (see services/shared/housing_preprocessing.py) and
 only differ in which estimator is trained on each incremental set of
 columns. See documentacion/06-arboles-de-decision-y-random-forest.md.
 """
-from fastapi import HTTPException
 import pandas as pd
-import matplotlib.pyplot as plt
 import seaborn as sns
 
 from sklearn.linear_model import LinearRegression
@@ -16,16 +14,16 @@ from sklearn.ensemble import RandomForestRegressor
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import r2_score
 
-from ...core.paths import results_graphics_path
 from ...schemas import TreeRegressionSchema, RandomForestRegressionSchema
 from ..shared.housing_preprocessing import prepare_housing_dataset, HOUSING_MODEL_COLUMNS
+from ..shared.plotting import saved_figure
 
 
 def _incremental_column_scores(model_factory, data_for_corr: pd.DataFrame, encoded_df: pd.DataFrame):
     """Train `model_factory()` adding one column at a time, return R2 per step.
 
     This mirrors a manual feature-selection experiment: does R2 improve
-    as we give the model more information?
+    as we give the model more information? Pure: no I/O, no plotting.
     """
     y = data_for_corr["median_house_value"].values
     columns_used = []
@@ -46,57 +44,55 @@ def _incremental_column_scores(model_factory, data_for_corr: pd.DataFrame, encod
     return scores
 
 
+def _save_housing_exploratory_plots(data: pd.DataFrame, data_for_corr: pd.DataFrame) -> dict:
+    histograms_fig = saved_figure("histograms.png")
+    with histograms_fig:
+        data.hist(bins=50, figsize=(20, 15))
+
+    scatter_fig = saved_figure("scatter_plot.png")
+    with scatter_fig as plt:
+        data.plot(
+            kind="scatter", x="longitude", y="latitude", alpha=0.4,
+            s=data["population"] / 100, label="population", figsize=(15, 7),
+            c="median_house_value", cmap=plt.get_cmap("jet"), colorbar=True,
+        )
+        plt.legend()
+
+    correlation_fig = saved_figure("correlation_plot.png")
+    with correlation_fig as plt:
+        plt.figure(figsize=(20, 10))
+        sns.heatmap(data_for_corr.corr(), annot=True)
+
+    return {
+        "histograms": histograms_fig.filename,
+        "scatter_plot": scatter_fig.filename,
+        "correlation_plot": correlation_fig.filename,
+    }
+
+
 class TreeEnsembleService:
     def housing_linear_regression(self):
         """Baseline: plain linear regression + exploratory plots on housing.csv."""
-        try:
-            data, data_for_corr, encoded_df = prepare_housing_dataset()
-
-            scores = _incremental_column_scores(LinearRegression, data_for_corr, encoded_df)
-
-            data.hist(bins=50, figsize=(20, 15))
-            plt.savefig(results_graphics_path("histograms.png"))
-            plt.close("all")
-
-            data.plot(
-                kind="scatter", x="longitude", y="latitude", alpha=0.4,
-                s=data["population"] / 100, label="population", figsize=(15, 7),
-                c="median_house_value", cmap=plt.get_cmap("jet"), colorbar=True,
-            )
-            plt.legend()
-            plt.savefig(results_graphics_path("scatter_plot.png"))
-            plt.close()
-
-            plt.figure(figsize=(20, 10))
-            sns.heatmap(data_for_corr.corr(), annot=True)
-            plt.savefig(results_graphics_path("correlation_plot.png"))
-            plt.close()
-
-            return {"model": "linear_regression", "scores_by_columns": scores}
-        except Exception as e:
-            raise HTTPException(status_code=422, detail=f"housing linear regression: {str(e)}")
+        data, data_for_corr, encoded_df = prepare_housing_dataset()
+        scores = _incremental_column_scores(LinearRegression, data_for_corr, encoded_df)
+        plot_files = _save_housing_exploratory_plots(data, data_for_corr)
+        return {"model": "linear_regression", "scores_by_columns": scores, "plot_files": plot_files}
 
     def decision_tree_regression(self, request: TreeRegressionSchema):
-        try:
-            _, data_for_corr, encoded_df = prepare_housing_dataset()
-            model_factory = lambda: DecisionTreeRegressor(max_depth=request.max_depth, random_state=42)
-            scores = _incremental_column_scores(model_factory, data_for_corr, encoded_df)
-            return {"model": "decision_tree", "max_depth": request.max_depth, "scores_by_columns": scores}
-        except Exception as e:
-            raise HTTPException(status_code=422, detail=f"decision tree regression: {str(e)}")
+        _, data_for_corr, encoded_df = prepare_housing_dataset()
+        model_factory = lambda: DecisionTreeRegressor(max_depth=request.max_depth, random_state=42)
+        scores = _incremental_column_scores(model_factory, data_for_corr, encoded_df)
+        return {"model": "decision_tree", "max_depth": request.max_depth, "scores_by_columns": scores}
 
     def random_forest_regression(self, request: RandomForestRegressionSchema):
-        try:
-            _, data_for_corr, encoded_df = prepare_housing_dataset()
-            model_factory = lambda: RandomForestRegressor(
-                n_estimators=request.n_estimators, max_depth=request.max_depth, random_state=42
-            )
-            scores = _incremental_column_scores(model_factory, data_for_corr, encoded_df)
-            return {
-                "model": "random_forest",
-                "n_estimators": request.n_estimators,
-                "max_depth": request.max_depth,
-                "scores_by_columns": scores,
-            }
-        except Exception as e:
-            raise HTTPException(status_code=422, detail=f"random forest regression: {str(e)}")
+        _, data_for_corr, encoded_df = prepare_housing_dataset()
+        model_factory = lambda: RandomForestRegressor(
+            n_estimators=request.n_estimators, max_depth=request.max_depth, random_state=42
+        )
+        scores = _incremental_column_scores(model_factory, data_for_corr, encoded_df)
+        return {
+            "model": "random_forest",
+            "n_estimators": request.n_estimators,
+            "max_depth": request.max_depth,
+            "scores_by_columns": scores,
+        }
