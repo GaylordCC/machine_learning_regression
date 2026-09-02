@@ -41,7 +41,7 @@ Puntos a entender:
 
 - `request.column_name` viene del `RegressionSchema` (`schemas.py:9`) — el `Enum MediaType` obliga a que solo puedas elegir `TV`, `Radio` o `Newspaper`, evitando que llegue un nombre de columna inválido al `.py` (validación en la frontera, buena práctica).
 - `.reshape(-1,1)`: scikit-learn espera que `X` sea una **matriz 2D** (filas = ejemplos, columnas = features), incluso si solo hay una feature. `Y` en cambio puede ser un vector 1D. Este `reshape` es la forma estándar de convertir una `Series` de pandas (1D) en una matriz de una sola columna.
-- El gráfico generado (`plotregression.png`) dibuja los puntos reales (`Y_test` vs `X_test`) y encima la recta de predicción — así se ve visualmente qué tan bien ajusta el modelo.
+- El gráfico generado (nombre en la respuesta, key `plot_file`, ej. `plotregression_TV_20260901_a1b2c3d4.png` dentro de `results_graphics/` — cada request genera un archivo propio, no se pisa entre llamadas) dibuja los puntos reales (`Y_test` vs `X_test`) y encima la recta de predicción — así se ve visualmente qué tan bien ajusta el modelo.
 - La respuesta del endpoint es un JSON con `predictions`, `rmse` y `r2_score` — puedes ver las métricas directamente en Swagger, sin depender de los `print()` en la consola del servidor.
 
 **Ejercicio para practicar**: corre el endpoint tres veces, una por cada columna (`TV`, `Radio`, `Newspaper`), y compara el `R²` impreso en consola. Vas a notar que `TV` explica las ventas mucho mejor que `Newspaper` — eso ya es una conclusión de negocio real ("la publicidad en periódico casi no impacta ventas").
