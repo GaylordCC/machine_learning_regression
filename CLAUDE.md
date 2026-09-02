@@ -8,13 +8,14 @@ API en **FastAPI** que expone endpoints de Machine Learning (regresión y clasif
 
 ## Arquitectura
 
-- `machine_learning/main.py` — punto de entrada de FastAPI; fuerza el backend `Agg` de matplotlib (headless, sin display) antes de registrar los routers y expone `GET /health`.
+- `machine_learning/main.py` — punto de entrada de FastAPI; fuerza el backend `Agg` de matplotlib (headless, sin display) antes de registrar los routers, registra los exception handlers globales (ver `core/exceptions.py`) y expone `GET /health`.
 - `machine_learning/core/paths.py` — rutas del proyecto (`sample_data/`, `results_graphics/`) resueltas con `pathlib` a partir de `__file__`. Usar siempre esto en vez de rutas hardcodeadas o relativas al cwd.
 - `machine_learning/core/security.py` — `hash_password`/`verify_password` con `bcrypt` directo (no `passlib`: incompatible con bcrypt>=4.1, ver comentario en el archivo). Sin usar todavía por ningún endpoint.
+- `machine_learning/core/exceptions.py` — excepciones de dominio (`InvalidTrainingDataError` → 422, `UpstreamServiceError` → 503) que los services levantan en vez de construir `HTTPException` a mano. Mapeadas a respuestas HTTP por handlers globales en `main.py`; cualquier excepción no anticipada cae en un handler catch-all → 500 genérico (el detalle real va solo al log, nunca al cliente). Los services ya no deben tener `try/except Exception` genérico — solo capturan un error específico si hay un caso de negocio real que traducir a `InvalidTrainingDataError`/`UpstreamServiceError` (ver `knn_service.py` e `image_classification_service.py` como ejemplos).
 - `machine_learning/routers/` — capa HTTP delgada: `regression.py` (8 endpoints) y `classification.py` (3 endpoints). Delegan toda la lógica a los services.
-- `machine_learning/services/regression/` — un archivo por técnica: `linear_regression_service.py` (EDA + simple + múltiple), `polynomial_regression_service.py`, `svr_service.py`, `tree_ensemble_service.py` (lineal/árbol/random forest sobre `housing.csv`).
-- `machine_learning/services/classification/` — `logistic_regression_service.py`, `knn_service.py`, `image_classification_service.py` (MNIST).
-- `machine_learning/services/shared/` — pipelines de datos reutilizados por varias técnicas: `housing_preprocessing.py` y `social_ads_preprocessing.py`.
+- `machine_learning/services/regression/` — un archivo por técnica: `linear_regression_service.py` (EDA + simple + múltiple), `polynomial_regression_service.py`, `svr_service.py`, `tree_ensemble_service.py` (lineal/árbol/random forest sobre `housing.csv`). Cada método de endpoint sigue el patrón: cargar datos → `_train*()` (función pura, sin I/O ni plotting, testeable con un DataFrame sintético) → `saved_figure(...)` de `services/shared/plotting.py` para el side-effect del gráfico → retornar métricas.
+- `machine_learning/services/classification/` — `logistic_regression_service.py`, `knn_service.py`, `image_classification_service.py` (MNIST). Mismo patrón de separación I/O/train/plot donde aplica (ver `image_classification_service.py`: `_fetch_mnist()` / `_train_digit_classifier()` / plot).
+- `machine_learning/services/shared/` — utilidades reutilizadas por varias técnicas: `housing_preprocessing.py` y `social_ads_preprocessing.py` (pipelines de datos), `plotting.py` (`saved_figure()`: guarda y cierra la figura de matplotlib, siempre, incluso si el dibujo falla a medias — evita fugas de figuras entre requests).
 - `machine_learning/schemas.py` — todos los schemas Pydantic de request (uno por endpoint con hiperparámetros configurables: `degree`, `kernel`, `max_depth`, `n_estimators`, `n_neighbors`).
 - `machine_learning/models.py` / `database.py` — SQLAlchemy para un modelo `User` (columna `hashed_password`, no `password` — ver `core/security.py`), sin relación con los endpoints de ML.
 - `machine_learning/sample_data/` — datasets CSV usados por los servicios.
@@ -23,7 +24,7 @@ API en **FastAPI** que expone endpoints de Machine Learning (regresión y clasif
 - `alembic/` — migraciones de base de datos (no relacionado con ML).
 - `documentacion/` — material de estudio de ML en español, generado a partir del código real del proyecto (teoría + referencias a archivo/técnica). Ver su `README.md` para el índice completo. **Al agregar una técnica nueva a los services, añade también su capítulo correspondiente ahí** y su fila en la tabla de endpoints de `documentacion/01-arquitectura-del-proyecto.md`.
 
-Patrón: Router → Service → (dataset CSV vía `core/paths.py`, o pipeline compartido en `services/shared/`). Cada router instancia su Service correspondiente por request (no hay inyección de dependencias para los servicios de ML). Todos los endpoints devuelven JSON estructurado con las métricas relevantes (`r2_score`, `rmse`, `precision`, `recall`, `f1_score`, según el caso).
+Patrón: Router → Service → (dataset CSV vía `core/paths.py`, o pipeline compartido en `services/shared/`). Cada router instancia su Service correspondiente por request (no hay inyección de dependencias para los servicios de ML). Todos los endpoints devuelven JSON estructurado con las métricas relevantes (`r2_score`, `rmse`, `precision`, `recall`, `f1_score`, según el caso). Los services no atrapan excepciones genéricas ni construyen `HTTPException`: dejan subir bugs reales (→ 500 vía handler global) y solo levantan las excepciones de dominio de `core/exceptions.py` para casos de negocio recuperables.
 
 ## Comandos de desarrollo
 
