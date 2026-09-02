@@ -9,8 +9,8 @@ import socket
 from unittest.mock import patch
 
 import pytest
-from fastapi import HTTPException
 
+from machine_learning.core.exceptions import UpstreamServiceError
 from machine_learning.services.classification.image_classification_service import (
     ImageClassificationService,
     OPENML_FETCH_TIMEOUT_SECONDS,
@@ -24,13 +24,13 @@ def test_openml_fetch_sets_timeout_during_call_and_restores_it_after_failure():
     def fake_fetch_openml(*args, **kwargs):
         nonlocal observed_timeout_during_call
         observed_timeout_during_call = socket.getdefaulttimeout()
-        raise RuntimeError("simulated network failure")
+        raise TimeoutError("simulated network timeout")
 
     with patch(
         "machine_learning.services.classification.image_classification_service.fetch_openml",
         side_effect=fake_fetch_openml,
     ):
-        with pytest.raises(HTTPException):
+        with pytest.raises(UpstreamServiceError):
             ImageClassificationService().handle_classification_image()
 
     assert observed_timeout_during_call == OPENML_FETCH_TIMEOUT_SECONDS
