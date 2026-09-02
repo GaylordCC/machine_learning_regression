@@ -29,17 +29,17 @@ No es documentación de "cómo usar la API" (para eso está el `README.md` de la
 
 | Técnica | Servicio / método | Endpoint |
 |---|---|---|
-| Análisis exploratorio (EDA) | `regression/linear_regression_service.py :: handle_user_query` | `POST /machine-learning` |
-| Regresión lineal simple | `regression/linear_regression_service.py :: regression_linear_model` | `POST /linear-regression` |
-| Regresión lineal múltiple | `regression/linear_regression_service.py :: regression_multi_linear_model` | `POST /multi-linear-regression` |
-| Regresión polinómica | `regression/polynomial_regression_service.py :: polynomical_regression` | `POST /polynomial-regression` |
-| SVR (Support Vector Regression) | `regression/svr_service.py :: svr_regression` | `POST /svr-regression` |
-| Regresión lineal iterativa sobre `housing.csv` | `regression/tree_ensemble_service.py :: housing_linear_regression` | `POST /housing-linear-regression` |
-| Árbol de decisión (regresión) | `regression/tree_ensemble_service.py :: decision_tree_regression` | `POST /decision-tree-regression` |
-| Random Forest (regresión) | `regression/tree_ensemble_service.py :: random_forest_regression` | `POST /random-forest-regression` |
-| Clasificación binaria de dígitos (MNIST) | `classification/image_classification_service.py :: handle_classification_image` | `POST /classification-algorithm` |
-| Regresión logística | `classification/logistic_regression_service.py :: handle_logistic_classification` | `POST /logistic-regression-classification` |
-| KNN | `classification/knn_service.py :: handle_knn_classification` | `POST /knn-classification` |
+| Análisis exploratorio (EDA) | `regression/linear_regression_service.py :: handle_user_query` | `POST /v1/machine-learning` |
+| Regresión lineal simple | `regression/linear_regression_service.py :: regression_linear_model` | `POST /v1/linear-regression` |
+| Regresión lineal múltiple | `regression/linear_regression_service.py :: regression_multi_linear_model` | `POST /v1/multi-linear-regression` |
+| Regresión polinómica | `regression/polynomial_regression_service.py :: polynomical_regression` | `POST /v1/polynomial-regression` |
+| SVR (Support Vector Regression) | `regression/svr_service.py :: svr_regression` | `POST /v1/svr-regression` |
+| Regresión lineal iterativa sobre `housing.csv` | `regression/tree_ensemble_service.py :: housing_linear_regression` | `POST /v1/housing-linear-regression` |
+| Árbol de decisión (regresión) | `regression/tree_ensemble_service.py :: decision_tree_regression` | `POST /v1/decision-tree-regression` |
+| Random Forest (regresión) | `regression/tree_ensemble_service.py :: random_forest_regression` | `POST /v1/random-forest-regression` |
+| Clasificación binaria de dígitos (MNIST) | `classification/image_classification_service.py :: handle_classification_image` | `POST /v1/classification-algorithm` |
+| Regresión logística | `classification/logistic_regression_service.py :: handle_logistic_classification` | `POST /v1/logistic-regression-classification` |
+| KNN | `classification/knn_service.py :: handle_knn_classification` | `POST /v1/knn-classification` |
 
 Todos los archivos de `services/` viven bajo `machine_learning/services/`. El pipeline compartido de `housing.csv` y de `Social_Network_Ads.csv` está en `services/shared/`.
 
