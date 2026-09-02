@@ -21,7 +21,7 @@ El algoritmo encuentra `b0` y `b1` minimizando el **error cuadrático** entre la
 
 ## 3.3 Código en este proyecto: `regression_linear_model`
 
-📍 `machine_learning/services/regression/linear_regression_service.py` · Endpoint: `POST /linear-regression`
+📍 `machine_learning/services/regression/linear_regression_service.py` · Endpoint: `POST /v1/linear-regression`
 
 ```python
 X = data[request.column_name].values.reshape(-1,1)   # una sola columna: TV, Radio o Newspaper
@@ -58,7 +58,7 @@ Cada coeficiente `bi` representa cuánto cambia `Y` por cada unidad de `Xi`, **m
 
 ## 3.5 Código en este proyecto: `regression_multi_linear_model`
 
-📍 `machine_learning/services/regression/linear_regression_service.py` · Endpoint: `POST /multi-linear-regression`
+📍 `machine_learning/services/regression/linear_regression_service.py` · Endpoint: `POST /v1/multi-linear-regression`
 
 ```python
 X = data.drop(['Newspaper', 'Sales'], axis=1).values   # queda TV + Radio
