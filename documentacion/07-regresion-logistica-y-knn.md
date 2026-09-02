@@ -21,7 +21,7 @@ Geométricamente, el modelo aprende una **frontera de decisión** (una línea re
 
 ## 7.3 Código en este proyecto: `handle_logistic_classification`
 
-📍 `machine_learning/services/classification/logistic_regression_service.py` · Endpoint: `POST /logistic-regression-classification`
+📍 `machine_learning/services/classification/logistic_regression_service.py` · Endpoint: `POST /v1/logistic-regression-classification`
 
 La preparación de datos (encoding de `Gender` + escalado) está factorizada en `services/shared/social_ads_preprocessing.py::prepare_train_test_split()`, porque **KNN usa exactamente el mismo pipeline** (§7.4).
 
@@ -71,7 +71,7 @@ La respuesta ya llega como JSON estructurado (antes solo se imprimía en consola
 
 ## 7.4 Teoría: K-Nearest Neighbors (KNN)
 
-📍 `machine_learning/services/classification/knn_service.py` · Endpoint: `POST /knn-classification` · body opcional: `{"n_neighbors": 5}`
+📍 `machine_learning/services/classification/knn_service.py` · Endpoint: `POST /v1/knn-classification` · body opcional: `{"n_neighbors": 5}`
 
 ✅ **Ya implementado** — originalmente `handle_knn_classification` era un *stub* (`return "successfully knn classification"`) y además compartía ruta con la regresión logística, por lo que era inalcanzable por HTTP aunque hubiera tenido lógica real (ver el bug documentado en [01](01-arquitectura-del-proyecto.md#15-hallazgos-corregidos-en-esta-refactorización)). Ambos problemas están corregidos: la ruta es `/knn-classification` y el método entrena un `KNeighborsClassifier` de verdad.
 
@@ -112,8 +112,8 @@ def handle_knn_classification(self, request: KnnClassificationSchema):
 `n_neighbors` (el hiperparámetro `k`) viene del body (`KnnClassificationSchema`, default `5`, validado entre 1 y 50) — pruébalo directamente:
 
 ```bash
-curl -X POST http://localhost:8080/knn-classification -H "Content-Type: application/json" -d '{"n_neighbors": 1}'
-curl -X POST http://localhost:8080/knn-classification -H "Content-Type: application/json" -d '{"n_neighbors": 21}'
+curl -X POST http://localhost:8080/v1/knn-classification -H "Content-Type: application/json" -d '{"n_neighbors": 1}'
+curl -X POST http://localhost:8080/v1/knn-classification -H "Content-Type: application/json" -d '{"n_neighbors": 21}'
 ```
 
 Compara `f1_score` entre ambas respuestas para ver el efecto de `k` muy pequeño vs. muy grande.
