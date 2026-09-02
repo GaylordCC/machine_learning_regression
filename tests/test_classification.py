@@ -27,7 +27,7 @@ def test_knn_raises_invalid_training_data_error_when_n_neighbors_exceeds_availab
 
 
 def test_logistic_regression_classification(client):
-    response = client.post("/logistic-regression-classification")
+    response = client.post("/v1/logistic-regression-classification")
     assert response.status_code == 200
     body = response.json()
 
@@ -44,7 +44,7 @@ def test_logistic_regression_classification(client):
 
 def test_knn_classification_is_reachable(client):
     """Regression test for the duplicate-route bug that made this endpoint unreachable."""
-    response = client.post("/knn-classification", json={"n_neighbors": 3})
+    response = client.post("/v1/knn-classification", json={"n_neighbors": 3})
     assert response.status_code == 200
     body = response.json()
     assert body["n_neighbors"] == 3
