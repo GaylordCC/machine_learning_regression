@@ -2,7 +2,7 @@
 
 > Requiere: [02](02-fundamentos-de-machine-learning.md) y [07](07-regresion-logistica-y-knn.md) (matriz de confusión).
 
-Este capítulo cubre `handle_classification_image` (📍 `machine_learning/services/classification/image_classification_service.py` · Endpoint: `POST /classification-algorithm`) — el ejercicio más avanzado del proyecto en cuanto a **evaluación rigurosa de un modelo**, aunque el modelo en sí (SGDClassifier) es relativamente simple. Está inspirado directamente en el capítulo 3 de *Hands-On Machine Learning* (Aurélien Géron), el mismo origen que el pipeline de `housing.csv`.
+Este capítulo cubre `handle_classification_image` (📍 `machine_learning/services/classification/image_classification_service.py` · Endpoint: `POST /v1/classification-algorithm`) — el ejercicio más avanzado del proyecto en cuanto a **evaluación rigurosa de un modelo**, aunque el modelo en sí (SGDClassifier) es relativamente simple. Está inspirado directamente en el capítulo 3 de *Hands-On Machine Learning* (Aurélien Géron), el mismo origen que el pipeline de `housing.csv`.
 
 La respuesta del endpoint ya llega como JSON estructurado (`cross_val_accuracy`, `confusion_matrix`, `precision`, `recall`, `f1_score`) en vez de solo imprimirse en consola.
 
