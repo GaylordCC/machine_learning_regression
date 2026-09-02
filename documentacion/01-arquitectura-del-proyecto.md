@@ -68,7 +68,7 @@ Cada dataset que se reutiliza en más de una técnica (`housing.csv`, `Social_Ne
 
 ## 1.3 Flujo de una petición típica
 
-Ejemplo con `POST /linear-regression`:
+Ejemplo con `POST /v1/linear-regression`:
 
 1. `routers/regression.py` recibe el POST, valida el body contra `RegressionSchema` (Pydantic).
 2. Instancia `LinearRegressionService()` y llama a `regression_linear_model(request=request)`.
@@ -84,20 +84,20 @@ Ejemplo con `POST /linear-regression`:
 
 | Método/Ruta | Service | Hiperparámetros configurables (body) |
 |---|---|---|
-| `POST /machine-learning` | `LinearRegressionService.handle_user_query` | — |
-| `POST /linear-regression` | `LinearRegressionService.regression_linear_model` | `column_name`: TV\|Radio\|Newspaper |
-| `POST /multi-linear-regression` | `LinearRegressionService.regression_multi_linear_model` | — |
-| `POST /polynomial-regression` | `PolynomialRegressionService.polynomical_regression` | `degree` (1-10, default 4) |
-| `POST /svr-regression` | `SvrRegressionService.svr_regression` | `kernel`: linear\|poly\|rbf |
-| `POST /housing-linear-regression` | `TreeEnsembleService.housing_linear_regression` | — |
-| `POST /decision-tree-regression` | `TreeEnsembleService.decision_tree_regression` | `max_depth` |
-| `POST /random-forest-regression` | `TreeEnsembleService.random_forest_regression` | `n_estimators`, `max_depth` |
-| `POST /classification-algorithm` | `ImageClassificationService.handle_classification_image` | — |
-| `POST /logistic-regression-classification` | `LogisticRegressionService.handle_logistic_classification` | — |
-| `POST /knn-classification` | `KnnService.handle_knn_classification` | `n_neighbors` (default 5) |
-| `GET /health` | — | Healthcheck simple |
+| `POST /v1/machine-learning` | `LinearRegressionService.handle_user_query` | — |
+| `POST /v1/linear-regression` | `LinearRegressionService.regression_linear_model` | `column_name`: TV\|Radio\|Newspaper |
+| `POST /v1/multi-linear-regression` | `LinearRegressionService.regression_multi_linear_model` | — |
+| `POST /v1/polynomial-regression` | `PolynomialRegressionService.polynomical_regression` | `degree` (1-10, default 4) |
+| `POST /v1/svr-regression` | `SvrRegressionService.svr_regression` | `kernel`: linear\|poly\|rbf |
+| `POST /v1/housing-linear-regression` | `TreeEnsembleService.housing_linear_regression` | — |
+| `POST /v1/decision-tree-regression` | `TreeEnsembleService.decision_tree_regression` | `max_depth` |
+| `POST /v1/random-forest-regression` | `TreeEnsembleService.random_forest_regression` | `n_estimators`, `max_depth` |
+| `POST /v1/classification-algorithm` | `ImageClassificationService.handle_classification_image` | — |
+| `POST /v1/logistic-regression-classification` | `LogisticRegressionService.handle_logistic_classification` | — |
+| `POST /v1/knn-classification` | `KnnService.handle_knn_classification` | `n_neighbors` (default 5) |
+| `GET /health` | — | Healthcheck simple (sin versionar: es un endpoint de infraestructura, no parte del contrato de la API) |
 
-Nota importante: **algunas rutas cambiaron de nombre respecto a la versión original** para que reflejen lo que realmente hacen (ver tabla de renombrados en §1.5). Si tenías guardadas peticiones con los nombres viejos (`/tree-regression`, `/random-tree-regression`, `/polynomical-regression`), actualízalas.
+Nota importante: **algunas rutas cambiaron de nombre respecto a la versión original** para que reflejen lo que realmente hacen (ver tabla de renombrados en §1.5), y **todas las rutas de ML viven ahora bajo el prefijo `/v1`** (ver `routers/regression.py` y `routers/classification.py`: `APIRouter(prefix="/v1", ...)`). Si tenías guardadas peticiones con los nombres viejos (`/tree-regression`, `/random-tree-regression`, `/polynomical-regression`) o sin el prefijo `/v1`, actualízalas.
 
 Todos los hiperparámetros son opcionales en el body — si mandas `{}` (o nada), se usan los valores por defecto que replican el comportamiento original. Pruébalos desde `/docs` (Swagger) cambiando valores — es la forma más rápida de experimentar con lo que estudias en cada capítulo.
 
@@ -107,11 +107,11 @@ Esta sección documenta **qué estaba mal, por qué, y cómo quedó**. La dejo c
 
 ### ✅ Ruta duplicada que hacía KNN inalcanzable
 **Antes**: `/logistic-regression-classification` estaba registrada dos veces (regresión logística y KNN), y FastAPI siempre resolvía a la primera — KNN nunca respondía por HTTP aunque el código existiera.
-**Ahora**: KNN vive en su propia ruta, `POST /knn-classification`, y además está **implementado de verdad** (antes era un `return "successfully knn classification"` sin lógica). Ver `services/classification/knn_service.py` y la teoría en [07](07-regresion-logistica-y-knn.md).
+**Ahora**: KNN vive en su propia ruta, `POST /v1/knn-classification`, y además está **implementado de verdad** (antes era un `return "successfully knn classification"` sin lógica). Ver `services/classification/knn_service.py` y la teoría en [07](07-regresion-logistica-y-knn.md).
 
 ### ✅ Rutas absolutas hardcodeadas a datasets
 **Antes**: cada `pd.read_csv(...)` apuntaba a una ruta fija de tu laptop o tu PC de escritorio (`/mnt/c/Users/Gaylord Carrillo/...`), lo que rompía el proyecto en Docker y en cualquier otra máquina.
-**Ahora**: `core/paths.py` calcula la ruta del proyecto con `pathlib` a partir de `__file__`, así que funciona igual sin importar desde dónde se ejecute. **Verificado**: se reconstruyó la imagen Docker y `POST /decision-tree-regression` respondió correctamente dentro del contenedor — antes fallaba.
+**Ahora**: `core/paths.py` calcula la ruta del proyecto con `pathlib` a partir de `__file__`, así que funciona igual sin importar desde dónde se ejecute. **Verificado**: se reconstruyó la imagen Docker y `POST /v1/decision-tree-regression` respondió correctamente dentro del contenedor — antes fallaba.
 
 ### ✅ Fuga de datos (data leakage) en el escalado
 **Antes**, en la clasificación logística: `X_test = sc_X.fit_transform(X_test)` — el escalador se reajustaba con datos de test.
@@ -124,10 +124,10 @@ Esta sección documenta **qué estaba mal, por qué, y cómo quedó**. La dejo c
 ### ✅ Nombres de método/ruta que no coincidían con lo que hacían
 | Antes | Qué hacía realmente | Ahora |
 |---|---|---|
-| `tree_regression()` / `POST /tree-regression` | Regresión **lineal** (sin ningún árbol) sobre `housing.csv` | `housing_linear_regression()` / `POST /housing-linear-regression` |
-| `random_tree_regression()` / `POST /random-tree-regression` | Un **árbol de decisión** simple (`DecisionTreeRegressor`) | `decision_tree_regression()` / `POST /decision-tree-regression` |
-| `random_forest_regression()` / `POST /random-forest-regression` | Random Forest (ya estaba bien nombrado) | Sin cambios |
-| `polynomical_regression()` / `POST /polynomical-regression` | Regresión polinómica (typo en "polynomical") | `polynomical_regression()` (nombre interno sin tocar) / `POST /polynomial-regression` (ruta con ortografía correcta) |
+| `tree_regression()` / `POST /tree-regression` | Regresión **lineal** (sin ningún árbol) sobre `housing.csv` | `housing_linear_regression()` / `POST /v1/housing-linear-regression` |
+| `random_tree_regression()` / `POST /random-tree-regression` | Un **árbol de decisión** simple (`DecisionTreeRegressor`) | `decision_tree_regression()` / `POST /v1/decision-tree-regression` |
+| `random_forest_regression()` / `POST /random-forest-regression` | Random Forest (ya estaba bien nombrado) | `POST /v1/random-forest-regression` (mismo nombre, ahora bajo `/v1`) |
+| `polynomical_regression()` / `POST /polynomical-regression` | Regresión polinómica (typo en "polynomical") | `polynomical_regression()` (nombre interno sin tocar) / `POST /v1/polynomial-regression` (ruta con ortografía correcta) |
 
 ### ✅ Duplicación de ~40 líneas repetidas 3 veces
 **Antes**: `tree_regression`, `random_tree_regression` y `random_forest_regression` repetían casi idéntico el bloque de *feature engineering* + imputación + encoding de `housing.csv`.
