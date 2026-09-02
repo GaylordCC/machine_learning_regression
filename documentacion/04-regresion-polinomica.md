@@ -57,7 +57,7 @@ Puntos clave:
 | `degree=4` (valor por defecto) | Sigue razonablemente bien la curva de salarios |
 | `degree=9` o `10` (extremo) | Con solo 10 puntos de datos, un polinomio de grado 9 puede pasar **exactamente** por cada punto — ajuste perfecto en train, pero prediría valores absurdos entre los puntos conocidos: **overfitting** severo |
 
-**Ejercicio recomendado**: llama a `POST /polynomial-regression` con `{"degree": 1}`, luego `{"degree": 4}`, luego `{"degree": 9}`, y compara `r2_polynomial` en cada respuesta además del gráfico generado en `results_graphics/polynomicalregression.png` (dibuja la curva lineal y la polinómica juntas). Vas a *ver* el overfitting con tus propios ojos — es la forma más rápida de que el concepto se quede grabado.
+**Ejercicio recomendado**: llama a `POST /polynomial-regression` con `{"degree": 1}`, luego `{"degree": 4}`, luego `{"degree": 9}`, y compara `r2_polynomial` en cada respuesta además del gráfico generado (key `plot_file` de la respuesta, ej. `polynomicalregression_degree9_20260901_a1b2c3d4.png` dentro de `results_graphics/` — cada `degree` genera su propio archivo) que dibuja la curva lineal y la polinómica juntas. Vas a *ver* el overfitting con tus propios ojos — es la forma más rápida de que el concepto se quede grabado.
 
 ```bash
 curl -X POST http://localhost:8080/polynomial-regression -H "Content-Type: application/json" -d '{"degree": 9}'
