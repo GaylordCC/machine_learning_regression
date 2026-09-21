@@ -10,7 +10,7 @@ El dataset de precios de viviendas en California (usado en el libro *Hands-On Ma
 
 ## 6.2 El pipeline compartido, paso a paso
 
-📍 `machine_learning/services/shared/housing_preprocessing.py` — usado por los tres servicios de `services/regression/tree_ensemble_service.py`. Antes este bloque estaba copiado casi idéntico 3 veces; ahora vive en un solo lugar (ver [01](01-arquitectura-del-proyecto.md#15-hallazgos-corregidos-en-esta-refactorización)).
+📍 `machine_learning/services/shared/housing_preprocessing.py` — usado por los tres servicios de `services/regression/tree_ensemble_service.py`. El bloque vive en un solo lugar y lo comparten los tres servicios (ver [01](01-arquitectura-del-proyecto.md#15-decisiones-de-diseño)).
 
 ### Paso 1 — Ingeniería de atributos (*feature engineering*)
 
@@ -42,7 +42,7 @@ encoded_df = pd.DataFrame(encoded.toarray(), columns=encoder.get_feature_names_o
 
 `ocean_proximity` toma valores como `NEAR BAY`, `INLAND`, `<1H OCEAN`, etc. — categorías sin orden natural, por eso `OneHotEncoder` (no `OrdinalEncoder`) es la elección correcta, tal como se explicó en [02](02-fundamentos-de-machine-learning.md). El resultado es un `DataFrame` con una columna binaria por categoría (ej. `ocean_proximity_INLAND`, `ocean_proximity_NEAR BAY`...).
 
-> La versión original del código también ejecutaba un `OrdinalEncoder` sobre la misma columna solo con fines exploratorios (nunca alimentaba ningún modelo). Se quitó del pipeline compartido para mantenerlo enfocado — si quieres ver la comparación `OrdinalEncoder` vs `OneHotEncoder` con tus propios ojos, es un buen mini-ejercicio: agrégalo temporalmente en un notebook aparte con `data[['ocean_proximity']]`.
+> El pipeline usa solo `OneHotEncoder` para esta columna. Como mini-ejercicio, se puede comparar contra `OrdinalEncoder` en un notebook aparte con `data[['ocean_proximity']]`.
 
 ### Paso 4 — Análisis de correlación (visible en `housing_linear_regression`)
 
@@ -57,7 +57,7 @@ La matriz de correlación mide, para cada par de columnas numéricas, qué tan r
 
 ### Paso 5 — Selección incremental de features
 
-📍 `_incremental_column_scores()` en `tree_ensemble_service.py` — factoriza el loop que antes estaba repetido en los tres métodos.
+📍 `_incremental_column_scores()` en `tree_ensemble_service.py` — contiene el loop que comparten los tres métodos.
 
 ```python
 def _incremental_column_scores(model_factory, data_for_corr, encoded_df):
@@ -82,7 +82,7 @@ En vez de entrenar un solo modelo con todas las columnas de una vez, **entrena u
 
 Vas a notar, por ejemplo, que `median_income` sola ya explica una buena parte del precio (es la variable más predictiva, consistente con el análisis de correlación del paso 4), y que agregar `latitude`/`longitude` casi siempre ayuda bastante más (porque en California, la ubicación geográfica está muy ligada al precio de la vivienda — cercanía a la costa, a ciudades como San Francisco, etc.).
 
-> `random_state=42` ahora está fijo en este `train_test_split` (antes no lo estaba, así que cada corrida daba un `R²` ligeramente distinto) — puedes comparar resultados entre corridas de forma justa.
+> `random_state=42` está fijo en este `train_test_split`, así que los resultados son comparables entre corridas.
 
 ## 6.3 Los tres modelos que se entrenan sobre este mismo pipeline
 
@@ -93,7 +93,7 @@ Usa `LinearRegression()` como línea base (baseline): antes de probar modelos m�
 
 **Teoría**: un árbol de decisión divide el espacio de datos en regiones haciendo preguntas tipo "¿`median_income` > 5.2?" de forma recursiva, hasta llegar a hojas donde predice el promedio de `Y` de los ejemplos que cayeron ahí. A diferencia de la regresión lineal, puede capturar relaciones **no lineales** y no necesita escalado de variables (no le importa que `total_rooms` esté en miles y `latitude` en decenas — solo compara valores dentro de la misma columna).
 
-**Riesgo**: un árbol sin restricciones (sin `max_depth`) tiende a **overfitting** severo — puede crecer hasta tener una hoja por cada ejemplo de entrenamiento, memorizando el dataset. El endpoint ahora acepta `max_depth` en el body (`TreeRegressionSchema`, default `None` = sin límite):
+**Riesgo**: un árbol sin restricciones (sin `max_depth`) tiende a **overfitting** severo — puede crecer hasta tener una hoja por cada ejemplo de entrenamiento, memorizando el dataset. El endpoint acepta `max_depth` en el body (`TreeRegressionSchema`, default `None` = sin límite):
 
 ```bash
 curl -X POST http://localhost:8080/v1/decision-tree-regression -H "Content-Type: application/json" -d '{"max_depth": 8}'
