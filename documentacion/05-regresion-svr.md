@@ -51,15 +51,15 @@ y_predict_scaled = svr.predict(X_test_scaled)
 y_predict = sc_Y.inverse_transform(y_predict_scaled.reshape(-1, 1)).ravel()  # de vuelta a unidades reales
 ```
 
-## 5.4 ✅ Hallazgo corregido: escalado de variables
+## 5.4 Escalado de variables
 
-**Este era el bug documentado originalmente**: la primera versión de este servicio no escalaba `X` ni `Y` antes de entrenar el `SVR`. A diferencia de `LinearRegression` (indiferente a la escala), **SVR con kernel `rbf`/`poly` es sensible a la escala** de las variables, porque el kernel calcula distancias entre puntos — si `TV` va de 0 a 300 y `Radio` va de 0 a 50, `TV` dominaría el cálculo de distancia solo por tener números más grandes, no porque sea más importante.
+El servicio escala `X` e `Y` antes de entrenar el `SVR`. A diferencia de `LinearRegression` (indiferente a la escala), **SVR con kernel `rbf`/`poly` es sensible a la escala** de las variables, porque el kernel calcula distancias entre puntos — si `TV` va de 0 a 300 y `Radio` va de 0 a 50, `TV` dominaría el cálculo de distancia solo por tener números más grandes, no porque sea más importante.
 
-**Impacto medido**: en pruebas locales, el `R²` pasó de **~0.60 (sin escalar)** a **~0.98 (escalado)** sobre los mismos datos — la diferencia es enorme y es la evidencia más directa, dentro de este proyecto, de por qué el escalado importa en modelos basados en distancia (compáralo con la teoría de KNN en [07](07-regresion-logistica-y-knn.md), que es aún más sensible a esto).
+**Impacto medido**: en pruebas locales, el `R²` fue de **~0.60 sin escalar** frente a **~0.98 escalando** sobre los mismos datos. Es la evidencia más directa, dentro de este proyecto, de por qué el escalado importa en modelos basados en distancia (ver también la teoría de KNN en [07](07-regresion-logistica-y-knn.md), que es aún más sensible a esto).
 
 Nota que además de escalar `X`, aquí también se escala `Y` (algo que no hace falta en regresión lineal ni en árboles) y luego se **des-escala** (`sc_Y.inverse_transform(...)`) el resultado, para que las predicciones vuelvan a estar en unidades de "ventas reales" y no en unidades estandarizadas.
 
-## 5.5 El kernel ahora es configurable
+## 5.5 El kernel es configurable
 
 El endpoint acepta `kernel` en el body (`linear`, `poly` o `rbf`, default `rbf`) vía `SvrRegressionSchema` (`machine_learning/schemas.py`). Pruébalo:
 
