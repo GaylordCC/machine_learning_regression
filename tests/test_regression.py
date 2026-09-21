@@ -27,9 +27,8 @@ def _assert_plot_file(filename: str, expected_prefix: str) -> None:
 
 
 def test_linear_regression_train_simple_is_pure_and_needs_no_disk_io():
-    """The training step no longer touches the filesystem or matplotlib -- this
-    builds an in-memory DataFrame and never calls load_advertising_data() or
-    saved_figure(), unlike the full regression_linear_model() endpoint method."""
+    """_train_simple needs no filesystem or matplotlib: it runs on an in-memory
+    DataFrame, unlike the full regression_linear_model() endpoint method."""
     data = pd.DataFrame({
         "TV": [10, 20, 30, 40, 50, 60, 70, 80, 90, 100],
         "Sales": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
@@ -52,9 +51,9 @@ def test_svr_train_is_pure_and_needs_no_disk_io():
 
 
 def test_random_forest_default_n_estimators_is_kept_low_for_latency():
-    """Regression test: n_estimators=100 (the old default) took ~45-50s per call
-    (measured: 50 estimators = 23.3s) — a bad default for a synchronous HTTP
-    endpoint with no progress feedback. Keep it low unless deliberately raised."""
+    """n_estimators=100 takes ~45-50s per call (50 estimators ~23s), too slow
+    for a synchronous HTTP endpoint with no progress feedback. Keep the
+    default low unless deliberately raised."""
     assert RandomForestRegressionSchema().n_estimators <= 50
 
 
@@ -78,8 +77,7 @@ def test_linear_regression_returns_predictions_and_metrics(client):
 
 
 def test_linear_regression_plot_file_differs_per_column(client):
-    """Two different columns must not collide on the same plot filename --
-    the old fixed "plotregression.png" name did exactly this."""
+    """Two different columns must not collide on the same plot filename."""
     tv_body = client.post("/v1/linear-regression", json={"column_name": "TV"}).json()
     radio_body = client.post("/v1/linear-regression", json={"column_name": "Radio"}).json()
     assert tv_body["plot_file"] != radio_body["plot_file"]
@@ -88,8 +86,8 @@ def test_linear_regression_plot_file_differs_per_column(client):
 
 
 def test_linear_regression_does_not_use_deprecated_squared_param(client):
-    """Regression test: mean_squared_error(..., squared=False) is deprecated in
-    sklearn 1.4 and removed in 1.6 — root_mean_squared_error replaces it."""
+    """mean_squared_error(..., squared=False) is deprecated in sklearn 1.4 and
+    removed in 1.6; root_mean_squared_error replaces it."""
     with warnings.catch_warnings(record=True) as caught:
         warnings.simplefilter("always")
         response = client.post("/v1/linear-regression", json={"column_name": "TV"})
