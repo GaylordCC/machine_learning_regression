@@ -27,6 +27,8 @@ La preparación de datos (encoding de `Gender` + escalado) está factorizada en 
 
 ### Preparación de datos
 
+Resumen de lo que hace `prepare_train_test_split()`:
+
 ```python
 X = data.iloc[:, [2, 3]]        # columnas Age, EstimatedSalary
 Y = data.iloc[:, -1].values      # columna Purchased
@@ -40,7 +42,7 @@ X = pd.concat([X, encoded_df], axis=1)   # Age + EstimatedSalary + Gender codifi
 
 Igual que en `housing.csv` ([06](06-arboles-de-decision-y-random-forest.md)), `Gender` es categórica sin orden → `OneHotEncoder` es la elección correcta.
 
-### ✅ Escalado — hallazgo corregido
+### Escalado sin fuga de datos
 
 ```python
 scaler = StandardScaler()
@@ -48,7 +50,7 @@ X_train = scaler.fit_transform(X_train)   # aprende Y transforma con train
 X_test = scaler.transform(X_test)          # solo transforma, reutilizando lo aprendido en train
 ```
 
-**Este era el bug documentado originalmente**: la primera versión de este código hacía `sc_X.fit_transform(X_test)` — reajustaba el escalador con datos de test en vez de reutilizar la media/desviación aprendidas en train. El resultado era que `X_train` y `X_test` quedaban escalados con "reglas" distintas — como si midieras algo con dos reglas calibradas diferente. Ya está corregido en `prepare_train_test_split()`, y como KNN reutiliza esa misma función, el fix aplica a ambos clasificadores a la vez.
+**Error frecuente que se evita aquí**: hacer `sc_X.fit_transform(X_test)` reajusta el escalador con datos de test en vez de reutilizar la media/desviación aprendidas en train. Así `X_train` y `X_test` quedan escalados con "reglas" distintas — como medir algo con dos reglas calibradas diferente. `prepare_train_test_split()` hace `fit` solo en train, y como KNN reutiliza esa misma función, la garantía aplica a ambos clasificadores a la vez.
 
 **Por qué la regresión logística sí necesita escalado** (a diferencia de un árbol de decisión): el algoritmo de optimización que ajusta `b0, b1, b2...` (por defecto, en scikit-learn, una variante de descenso de gradiente/`lbfgs`) converge mejor y más rápido cuando las variables están en escalas comparables. Sin escalar, `EstimatedSalary` (decenas de miles) dominaría numéricamente sobre `Age` (decenas) aunque ambas sean igual de relevantes.
 
@@ -67,13 +69,13 @@ return {
 }
 ```
 
-La respuesta ya llega como JSON estructurado (antes solo se imprimía en consola y el endpoint devolvía un string genérico).
+La respuesta llega como JSON estructurado.
 
 ## 7.4 Teoría: K-Nearest Neighbors (KNN)
 
 📍 `machine_learning/services/classification/knn_service.py` · Endpoint: `POST /v1/knn-classification` · body opcional: `{"n_neighbors": 5}`
 
-✅ **Ya implementado** — originalmente `handle_knn_classification` era un *stub* (`return "successfully knn classification"`) y además compartía ruta con la regresión logística, por lo que era inalcanzable por HTTP aunque hubiera tenido lógica real (ver el bug documentado en [01](01-arquitectura-del-proyecto.md#15-hallazgos-corregidos-en-esta-refactorización)). Ambos problemas están corregidos: la ruta es `/knn-classification` y el método entrena un `KNeighborsClassifier` de verdad.
+KNN tiene su propia ruta (`/knn-classification`) y el método entrena un `KNeighborsClassifier` sobre el mismo pipeline de datos que la regresión logística.
 
 **Idea central**: KNN es de los algoritmos más simples de ML — no "aprende" una fórmula ni una frontera durante el entrenamiento (de hecho, `.fit()` en KNN básicamente solo *memoriza* los datos de entrenamiento). Para clasificar un punto nuevo:
 
