@@ -2,15 +2,13 @@
 
 Este proyecto ya cubre una parte sólida del ML supervisado clásico. Esta hoja de ruta ordena lo que falta, de más inmediato a más avanzado, para que sigas "nutriendo" el proyecto de forma progresiva. Cada vez que implementes algo de esta lista, agrega su propio capítulo en esta carpeta siguiendo el estilo de los archivos `03`-`08`.
 
-## 10.1 Corto plazo — completar lo que ya empezaste
+## 10.1 Corto plazo — consolidar lo existente
 
-Estos son literalmente huecos que ya existen en el código actual:
+Mejoras pequeñas sobre los endpoints actuales:
 
-- [ ] **Implementar KNN de verdad** (`handle_knn_classification` está vacío). Ver esqueleto en [07-regresion-logistica-y-knn.md](07-regresion-logistica-y-knn.md).
-- [ ] **Arreglar la ruta duplicada** de `/logistic-regression-classification` para que KNN sea alcanzable.
-- [ ] **Corregir el `fit_transform` de test** en `handle_logistic_classification` (data leakage). Ver [07](07-regresion-logistica-y-knn.md).
-- [ ] **Agregar escalado a SVR** (`svr_regression`). Ver [05](05-regresion-svr.md).
-- [ ] **Arreglar rutas absolutas hardcodeadas** a los CSV — usar rutas relativas al proyecto. Ver [01](01-arquitectura-del-proyecto.md).
+- [ ] **Escalar los píxeles de MNIST** (`X / 255.0`) antes de entrenar el `SGDClassifier`. Ver [08](08-clasificacion-mnist-y-metricas.md#83-el-modelo-sgdclassifier).
+- [ ] **Agregar el "clasificador tonto"** como referencia en el endpoint de MNIST. Ver [08](08-clasificacion-mnist-y-metricas.md#84-validación-cruzada-en-profundidad).
+- [ ] **Exponer `C` y `epsilon`** como campos opcionales de `SvrRegressionSchema`. Ver [05](05-regresion-svr.md).
 
 ## 10.2 Clasificación — algoritmos que faltan
 
@@ -31,8 +29,8 @@ Hoy el proyecto es 100% supervisado. `Mall_Customers.csv` ya está en `sample_da
 ## 10.4 Mejora de modelos — llevar lo que ya tienes a nivel profesional
 
 - **Regularización (Ridge, Lasso, ElasticNet)**: variantes de regresión lineal que penalizan coeficientes grandes para reducir overfitting, especialmente útil cuando hay muchas features correlacionadas (como en `housing.csv`). Aplícalo sobre los ejercicios de [03](03-regresion-lineal-simple-y-multiple.md) y [06](06-arboles-de-decision-y-random-forest.md).
-- **GridSearchCV / RandomizedSearchCV**: búsqueda automática del mejor hiperparámetro (ej. `max_depth` del árbol, `k` de KNN, `degree` del polinomio) en vez de probar manualmente. Reemplaza el loop manual que ya usas en `tree_regression` por una búsqueda sistemática.
-- **`sklearn.pipeline.Pipeline`**: encadena preprocesamiento (escalado, encoding) + modelo en un solo objeto, evitando el error de `fit_transform` en test que ya identificaste en [07](07-regresion-logistica-y-knn.md) — con un `Pipeline`, ese error es estructuralmente imposible de cometer.
+- **GridSearchCV / RandomizedSearchCV**: búsqueda automática del mejor hiperparámetro (ej. `max_depth` del árbol, `k` de KNN, `degree` del polinomio) en vez de probar manualmente. Reemplaza el loop manual de `_incremental_column_scores` por una búsqueda sistemática.
+- **`sklearn.pipeline.Pipeline`**: encadena preprocesamiento (escalado, encoding) + modelo en un solo objeto, evitando el error de `fit_transform` sobre test descrito en [07](07-regresion-logistica-y-knn.md) — con un `Pipeline`, ese error es estructuralmente imposible de cometer.
 - **`ColumnTransformer`**: aplica transformaciones distintas a distintas columnas dentro de un mismo `Pipeline` (ej. `StandardScaler` a columnas numéricas + `OneHotEncoder` a categóricas, en un solo paso) — resuelve de forma elegante el patrón que hoy haces "a mano" en `housing.csv` y `Social_Network_Ads.csv`.
 - **Feature importance / interpretabilidad**: `feature_importances_` en árboles/Random Forest, coeficientes en modelos lineales, y herramientas más avanzadas como **SHAP** para explicar predicciones individuales.
 
@@ -57,11 +55,11 @@ Si quieres ir más allá de usar scikit-learn como caja negra:
 
 Si quieres una secuencia recomendada para las próximas semanas, este es un orden razonable:
 
-1. Arreglar los huecos de §10.1 (son rápidos y consolidan lo ya aprendido).
+1. Completar los puntos de §10.1 (son rápidos y consolidan lo ya visto).
 2. Implementar K-Means sobre `Mall_Customers.csv` — primer contacto con no supervisado.
 3. Aprender `Pipeline` + `ColumnTransformer` y refactorizar `handle_logistic_classification` con ellos — consolida el concepto de data leakage de forma práctica.
 4. Agregar Naive Bayes y SVC sobre `Social_Network_Ads.csv`, comparar los 4-5 modelos de clasificación entre sí con una tabla de métricas.
 5. Agregar `GridSearchCV` a Random Forest sobre `housing.csv`.
 6. Implementar guardado/carga de modelos con `joblib` para al menos un endpoint.
 
-Cada vez que completes un punto, dime y actualizamos esta hoja de ruta y agregamos el capítulo correspondiente en esta carpeta.
+Al completar un punto, se actualiza esta hoja de ruta y se agrega el capítulo correspondiente en esta carpeta.
