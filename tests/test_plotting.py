@@ -1,12 +1,10 @@
-"""Tests for services/shared/plotting.py: the per-request unique filename,
-and the regression test for the concurrency bug that made the lock necessary
-in the first place.
+"""Tests for services/shared/plotting.py: the per-request unique filename and
+the lock that serializes concurrent draws.
 
 matplotlib.pyplot keeps its "current figure" as global, process-wide state,
-not thread-local. Reproduced empirically (before the lock existed): two
-threads drawing distinguishable content concurrently through saved_figure()
-could end up with one thread's plot completely blank, because the other
-thread's plt.close("all") tore down the figure it was still drawing on.
+not thread-local. Without the lock, two threads drawing concurrently through
+saved_figure() could end up with one plot blank, because the other thread's
+plt.close("all") tears down the figure it is still drawing on.
 """
 import re
 import threading
