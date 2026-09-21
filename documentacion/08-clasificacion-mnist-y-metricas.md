@@ -4,7 +4,7 @@
 
 Este capítulo cubre `handle_classification_image` (📍 `machine_learning/services/classification/image_classification_service.py` · Endpoint: `POST /v1/classification-algorithm`) — el ejercicio más avanzado del proyecto en cuanto a **evaluación rigurosa de un modelo**, aunque el modelo en sí (SGDClassifier) es relativamente simple. Está inspirado directamente en el capítulo 3 de *Hands-On Machine Learning* (Aurélien Géron), el mismo origen que el pipeline de `housing.csv`.
 
-La respuesta del endpoint ya llega como JSON estructurado (`cross_val_accuracy`, `confusion_matrix`, `precision`, `recall`, `f1_score`) en vez de solo imprimirse en consola.
+La respuesta del endpoint es un JSON estructurado (`cross_val_accuracy`, `confusion_matrix`, `precision`, `recall`, `f1_score`).
 
 ## 8.1 Dataset: MNIST
 
@@ -80,7 +80,7 @@ print(cross_val_score(NuncaEsCincoClassifier(), X_train, Y_train_5, cv=3, scorin
 
 ```python
 Y_train_predict = cross_val_predict(sgd_classifier, X_train, Y_train_5, cv=3)
-print(confusion_matrix(Y_train_5, Y_train_predict))
+confusion_matrix(Y_train_5, Y_train_predict)
 ```
 
 Diferencia clave con `cross_val_score`: en vez de devolver una métrica resumida por fold, `cross_val_predict` devuelve **la predicción real para cada ejemplo de entrenamiento** (cada ejemplo fue predicho por el fold que *no* lo usó para entrenar, así que sigue siendo una evaluación "honesta", no memorizada). Esto te permite construir la matriz de confusión completa sobre todo el conjunto de train.
