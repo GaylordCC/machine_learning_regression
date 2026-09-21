@@ -1,16 +1,12 @@
 """Password hashing for the (currently unused) User model.
 
-No endpoint creates or authenticates users yet -- this exists so that when
-one is added, it can't accidentally store a plaintext password. See
-security-vulnerabilities.md checklist item 3 (secrets) in the audit that
-flagged this.
+No endpoint creates or authenticates users yet; this module keeps a future
+one from storing plaintext passwords.
 
-Uses bcrypt directly rather than passlib: passlib 1.7.4 (last released
-~2020, effectively unmaintained) is incompatible with current bcrypt
-releases (verified here -- raises "password cannot be longer than 72
-bytes" even for short passwords, due to passlib's bcrypt-version-sniffing
-code breaking against bcrypt>=4.1). bcrypt itself is actively maintained
-and is all passlib was wrapping here anyway.
+Uses bcrypt directly rather than passlib: passlib 1.7.4 is unmaintained and
+incompatible with bcrypt>=4.1 (it raises "password cannot be longer than 72
+bytes" even for short passwords, because its bcrypt version detection
+breaks). bcrypt itself is maintained and is all passlib wrapped here.
 """
 import bcrypt
 
