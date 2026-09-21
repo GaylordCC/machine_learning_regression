@@ -48,7 +48,7 @@ X_train, X_test, Y_train, Y_test = train_test_split(X, Y, test_size=0.2, random_
 - `test_size=0.2` → 20% de los datos se reserva para test.
 - `random_state=42` → fija la semilla aleatoria, para que el split sea **reproducible** (si vuelves a correr el experimento, obtienes exactamente la misma división). Lo ves usado consistentemente en todos los servicios de `services/regression/`.
 
-**Regla de oro que rompe el proyecto en un solo lugar** (ver [01-arquitectura-del-proyecto.md](01-arquitectura-del-proyecto.md)): cualquier transformación que "aprenda" algo de los datos (un `StandardScaler`, un `OneHotEncoder` con categorías dinámicas, etc.) debe hacer `fit` **solo con train**, y `transform` (sin `fit`) con test. Si haces `fit` también en test, el modelo indirectamente "espía" información del conjunto que se supone no debería conocer — esto se llama **data leakage**.
+**Regla de oro** (ver [01-arquitectura-del-proyecto.md](01-arquitectura-del-proyecto.md)): cualquier transformación que "aprenda" algo de los datos (un `StandardScaler`, un `OneHotEncoder` con categorías dinámicas, etc.) debe hacer `fit` **solo con train**, y `transform` (sin `fit`) con test. Si haces `fit` también en test, el modelo indirectamente "espía" información del conjunto que se supone no debería conocer — esto se llama **data leakage**.
 
 ## 2.5 Overfitting y underfitting
 
@@ -68,7 +68,7 @@ Cómo detectarlo: comparar la métrica en train vs. test. Si train es mucho mejo
 | **R² (coeficiente de determinación)** | Qué proporción de la variabilidad de `Y` explica el modelo. 1.0 = perfecto, 0 = tan malo como predecir siempre el promedio, puede ser negativo si es peor que eso | — | Usado en casi todos los métodos de regresión |
 
 ```python
-rmse = mean_squared_error(Y_test, y_predict, squared=False)
+rmse = root_mean_squared_error(Y_test, y_predict)
 r2 = r2_score(Y_test, y_predict)
 ```
 
@@ -114,14 +114,14 @@ X_train = sc_X.fit_transform(X_train)   # aprende media/desviación DE TRAIN y t
 X_test = sc_X.transform(X_test)          # reutiliza esa misma media/desviación (sin fit)
 ```
 
-Los algoritmos basados en árboles (Decision Tree, Random Forest) **no necesitan** escalado — por eso no lo ves en `random_tree_regression`/`random_forest_regression`, y sí lo necesitaría (y no lo tiene) `svr_regression`.
+Los algoritmos basados en árboles (Decision Tree, Random Forest) **no necesitan** escalado — por eso no se escalan las variables en `decision_tree_regression` ni en `random_forest_regression`, mientras que `svr_regression` sí las escala.
 
 ### Codificación de variables categóricas
 
 Los modelos de scikit-learn solo entienden números, así que columnas de texto (`Gender`, `ocean_proximity`) hay que convertirlas:
 
 - **OneHotEncoder**: crea una columna binaria (0/1) por cada categoría. Úsalo cuando las categorías **no tienen orden** (Gender: Male/Female; ocean_proximity: NEAR BAY/INLAND/...). Es el que usa este proyecto para ambas variables.
-- **OrdinalEncoder**: asigna un número entero por categoría (0, 1, 2...). Solo tiene sentido si existe un **orden natural** (ej. "bajo/medio/alto"). El proyecto lo usa sobre `ocean_proximity` solo con fines exploratorios (`np.random.choice` de prueba) — la codificación que realmente alimenta los modelos es la de `OneHotEncoder`, que es la correcta para esa columna porque sus categorías no tienen jerarquía.
+- **OrdinalEncoder**: asigna un número entero por categoría (0, 1, 2...). Solo tiene sentido si existe un **orden natural** (ej. "bajo/medio/alto"). El proyecto no lo usa: para `ocean_proximity` se emplea `OneHotEncoder`, que es la codificación correcta porque sus categorías no tienen jerarquía.
 
 ## 2.8 Validación cruzada (cross-validation)
 
