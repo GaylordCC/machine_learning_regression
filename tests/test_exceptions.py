@@ -1,8 +1,7 @@
 """Tests for the global exception handlers registered in main.py.
 
-Verifies the HTTP-status mapping for the app's domain exceptions, and --
-the specific bug this replaces -- that an unexpected error never leaks its
-raw message to the client.
+Verifies the HTTP-status mapping for the app's domain exceptions, and that an
+unexpected error never leaks its raw message to the client.
 """
 from unittest.mock import patch
 
