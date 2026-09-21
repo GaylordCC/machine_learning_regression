@@ -8,7 +8,7 @@ def test_health_check(client):
 
 
 def test_no_duplicate_routes():
-    """Regression test: two endpoints sharing (method, path) used to make KNN unreachable.
+    """Two endpoints sharing (method, path) would make one of them unreachable.
 
     Compares (method, path) pairs, not just path: a resource can legitimately
     expose the same path under different HTTP methods (e.g. GET + POST /health).
