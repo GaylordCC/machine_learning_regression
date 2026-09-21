@@ -34,8 +34,8 @@ def test_logistic_regression_classification(client):
     # Fully deterministic: fixed random_state=0 in the train/test split and the
     # StandardScaler fit, plus LogisticRegression's default 'lbfgs' solver (which
     # doesn't depend on random_state). Exact values catch a real regression
-    # (e.g. reintroducing the fit_transform-on-test data leakage bug) instead of
-    # just checking the value is "a valid ratio".
+    # (e.g. fitting the scaler on test data) instead of just checking the value
+    # is "a valid ratio".
     assert body["confusion_matrix"] == [[56, 2], [5, 17]]
     assert body["precision"] == pytest.approx(0.8947368421052632)
     assert body["recall"] == pytest.approx(0.7727272727272727)
@@ -43,7 +43,7 @@ def test_logistic_regression_classification(client):
 
 
 def test_knn_classification_is_reachable(client):
-    """Regression test for the duplicate-route bug that made this endpoint unreachable."""
+    """KNN answers on its own route, with no path collision with logistic regression."""
     response = client.post("/v1/knn-classification", json={"n_neighbors": 3})
     assert response.status_code == 200
     body = response.json()
