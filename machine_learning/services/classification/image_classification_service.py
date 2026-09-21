@@ -17,14 +17,12 @@ from sklearn.metrics import confusion_matrix, precision_score, recall_score, f1_
 from ...core.exceptions import UpstreamServiceError
 from ..shared.plotting import saved_figure
 
-# fetch_openml has no timeout parameter in its public API (verified: only
-# n_retries/delay, which bound retry count but not per-attempt wall time).
-# socket.setdefaulttimeout is the only real lever, but it's process-global,
-# not thread-local -- a concurrent request using sockets elsewhere in the
-# process during this window would also be bound by it. Acceptable trade-off
-# for a low-concurrency study API; would need a real per-call timeout
-# mechanism (e.g. a subprocess or asyncio.wait_for around a thread) before
-# this app ever runs under real concurrent load.
+# fetch_openml has no timeout parameter (only n_retries/delay, which bound the
+# retry count, not the time per attempt), so socket.setdefaulttimeout is the
+# only lever. It is process-global, not thread-local: a concurrent request
+# using sockets during this window is also bound by it. Acceptable for a
+# low-concurrency study API; under real concurrent load it needs a per-call
+# mechanism (e.g. a subprocess, or asyncio.wait_for around a thread).
 OPENML_FETCH_TIMEOUT_SECONDS = 30
 
 
