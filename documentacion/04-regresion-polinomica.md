@@ -44,7 +44,7 @@ poly_model.fit(X_poly, Y)
 Puntos clave:
 
 - `PolynomialFeatures(degree=...)` transforma cada valor de `X` en un vector `[1, X, X², ..., X^degree]`. Es un **transformador de features**, igual en espíritu al `OneHotEncoder`/`StandardScaler` que viste en fundamentos — no entrena nada, solo reestructura los datos.
-- A diferencia de la versión original del código, `degree` ya **no está fijo en 4** — es un parámetro del request (`PolynomialRegressionSchema`, `machine_learning/schemas.py`), validado entre 1 y 10. Puedes mandarlo desde Swagger sin tocar código.
+- `degree` es un parámetro del request (`PolynomialRegressionSchema`, `machine_learning/schemas.py`, default 4), validado entre 1 y 10. Se puede enviar desde Swagger sin tocar código.
 - El endpoint entrena y grafica **ambos modelos** (lineal y polinómico) y devuelve `r2_linear` y `r2_polynomial` en la respuesta — puedes comparar numéricamente los dos sin mirar la consola.
 
 ## 4.4 El hiperparámetro más importante: `degree`
