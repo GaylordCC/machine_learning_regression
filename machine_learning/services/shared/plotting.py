@@ -1,28 +1,24 @@
 """Shared matplotlib figure lifecycle for the plotting services.
 
-Every service used to repeat `plt.savefig(...); plt.close()` inline, which
-never closed the figure if drawing raised partway through -- a real leak,
-since matplotlib keeps every open figure in memory until it's closed. This
-also lets the training/scoring logic stay separate from the plotting side
-effect: services call this only around the draw+save step.
+The figure is always closed, even if drawing raises partway through, because
+matplotlib keeps every open figure in memory until it's closed. It also keeps
+the training/scoring logic separate from the plotting side effect: services
+call this only around the draw+save step.
 
 matplotlib.pyplot's "current figure" is global, process-wide mutable state --
-not thread-local. FastAPI runs each sync route in a worker thread, so two
-concurrent requests to a plotting endpoint both drive pyplot's global state
-at once. Reproduced empirically (two threads drawing distinguishable content
-through this function concurrently): one thread's plot ended up completely
-blank because the other thread's plt.close("all") tore down the figure it
-was still drawing on. A lock around the whole draw+save+close cycle is what
-actually fixes this.
+not thread-local. FastAPI runs each sync route in a worker thread, so
+concurrent requests to plotting endpoints would drive it at once, and one
+thread's plt.close("all") could tear down a figure another thread is still
+drawing on (leaving a blank plot). A lock around the whole draw+save+close
+cycle prevents this.
 
-Each call also gets its own permanent, uniquely-named output file (instead
-of overwriting one fixed "latest run" filename) so a caller can trace which
-plot belongs to which request -- see `filename` below and the `plot_file`
-key each service adds to its response. Callers should build `base_filename`
-from the request's own parameters where they exist (e.g.
-`f"plotregression_{column_name}.png"`), not just the technique name --
-otherwise two different requests to the same endpoint are still
-indistinguishable from the filename alone, unique suffix or not.
+Each call writes its own uniquely-named file instead of overwriting a fixed
+"latest run" name, so a caller can trace which plot belongs to which request
+-- see `filename` below and the `plot_file` key each service adds to its
+response. Callers should build `base_filename` from the request's own
+parameters where they exist (e.g. `f"plotregression_{column_name}.png"`), not
+just the technique name; otherwise two different requests to the same
+endpoint are indistinguishable by filename alone, unique suffix or not.
 """
 import os
 import threading
