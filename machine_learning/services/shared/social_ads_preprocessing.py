@@ -3,7 +3,7 @@ logistic regression and KNN classifiers (see documentacion/07).
 """
 import pandas as pd
 from sklearn.model_selection import train_test_split
-from sklearn.preprocessing import OneHotEncoder, StandardScaler
+from sklearn.preprocessing import OneHotEncoder
 
 from ...core.paths import sample_data_path
 
@@ -12,13 +12,13 @@ def load_social_ads_dataset() -> pd.DataFrame:
     return pd.read_csv(sample_data_path("Social_Network_Ads.csv"))
 
 
-def prepare_train_test_split(random_state: int = 0):
-    """Return scaled (X_train, X_test, Y_train, Y_test) ready to fit a classifier.
+def split_train_test(random_state: int = 0):
+    """Return the unscaled (X_train, X_test, Y_train, Y_test).
 
     Age + EstimatedSalary + one-hot encoded Gender -> Purchased.
-    Scaling is fit on train only, then reused (transform) on test —
-    fitting a scaler on test data would leak test statistics into the
-    "unseen" evaluation set.
+    Scaling is left to the caller, inside a Pipeline: the scaler is then fit
+    on train only (and refit inside each cross-validation fold), so no test or
+    validation statistics leak into the fit.
     """
     data = load_social_ads_dataset()
     X = data.iloc[:, [2, 3]]
@@ -30,10 +30,4 @@ def prepare_train_test_split(random_state: int = 0):
 
     X = pd.concat([X, encoded_df], axis=1)
 
-    X_train, X_test, Y_train, Y_test = train_test_split(X, Y, test_size=0.2, random_state=random_state)
-
-    scaler = StandardScaler()
-    X_train = scaler.fit_transform(X_train)
-    X_test = scaler.transform(X_test)
-
-    return X_train, X_test, Y_train, Y_test
+    return train_test_split(X, Y, test_size=0.2, random_state=random_state)
