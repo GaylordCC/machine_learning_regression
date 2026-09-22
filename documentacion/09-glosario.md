@@ -16,21 +16,26 @@ Referencia rápida en español. Ordenado alfabéticamente. Cada término enlaza 
 - **F1-score**: media armónica entre precision y recall. Ver [02](02-fundamentos-de-machine-learning.md).
 - **Hiperparámetro**: configuración elegida por la persona antes de entrenar (ej. `degree`, `k`, `n_estimators`), no aprendida por el modelo.
 - **Kernel**: función que define la "forma" de las fronteras/curvas que un modelo SVM/SVR puede aprender (`linear`, `poly`, `rbf`). Ver [05](05-regresion-svr.md).
+- **MAE (Mean Absolute Error)**: promedio del error absoluto entre valor real y predicho, en las unidades de `Y`. Más robusto a valores atípicos que el RMSE. Ver [12](12-metricas-de-evaluacion.md).
 - **Matriz de confusión**: tabla que cruza predicciones vs. valores reales en clasificación (TP, TN, FP, FN). Ver [02](02-fundamentos-de-machine-learning.md).
 - **Modelo**: objeto que aprende un patrón de los datos (ej. `LinearRegression()`, `SVR()`).
+- **MSE (Mean Squared Error)**: promedio de los errores al cuadrado; base del RMSE. Ver [12](12-metricas-de-evaluacion.md).
 - **OneHotEncoder**: convierte una variable categórica sin orden en varias columnas binarias. Ver [02](02-fundamentos-de-machine-learning.md).
 - **OrdinalEncoder**: convierte una variable categórica **con orden** en números enteros. Ver [02](02-fundamentos-de-machine-learning.md).
 - **Overfitting (sobre-ajuste)**: el modelo memoriza el ruido de entrenamiento y generaliza mal a datos nuevos. Ver [02](02-fundamentos-de-machine-learning.md), [04](04-regresion-polinomica.md).
 - **Parámetro**: valor que el modelo aprende automáticamente durante el entrenamiento (ej. los coeficientes de una regresión).
-- **Pipeline**: encadenamiento de pasos de transformación + modelo en un solo objeto reutilizable (`sklearn.pipeline.Pipeline`). Ver [10](10-hoja-de-ruta.md).
+- **Pipeline**: encadenamiento de pasos de transformación + modelo en un solo objeto reutilizable (`sklearn.pipeline.Pipeline`). Dentro de la validación cruzada, reajusta el preprocesamiento en cada partición y evita la fuga de datos. Ver [11](11-pipeline-de-machine-learning.md) y [10](10-hoja-de-ruta.md).
+- **Leave-one-out**: validación cruzada con `k = n`: cada fila se predice con un modelo entrenado con todas las demás. Útil con datasets muy pequeños. Ver [12](12-metricas-de-evaluacion.md).
 - **Precision (precisión)**: de lo que el modelo predijo como positivo, cuánto era realmente positivo. Ver [02](02-fundamentos-de-machine-learning.md).
 - **R² (coeficiente de determinación)**: proporción de la variabilidad de `Y` explicada por el modelo, en regresión. Ver [02](02-fundamentos-de-machine-learning.md).
 - **Recall (exhaustividad/sensibilidad)**: de todos los positivos reales, cuántos detectó el modelo. Ver [02](02-fundamentos-de-machine-learning.md).
 - **Regresión**: tarea de ML donde el target es un valor numérico continuo. Ver [02](02-fundamentos-de-machine-learning.md).
 - **Regularización**: técnica que penaliza coeficientes grandes para reducir overfitting (ej. Ridge, Lasso). Ver [10](10-hoja-de-ruta.md).
 - **RMSE (Root Mean Squared Error)**: raíz del error cuadrático medio, en las mismas unidades que `Y`. Ver [02](02-fundamentos-de-machine-learning.md).
+- **ROC-AUC**: área bajo la curva ROC; mide qué tan bien un clasificador separa las clases considerando todos los umbrales posibles (1.0 = perfecto, 0.5 = azar). Ver [12](12-metricas-de-evaluacion.md).
 - **StandardScaler**: transforma variables numéricas a media 0 y desviación estándar 1. Ver [02](02-fundamentos-de-machine-learning.md).
 - **Target / label**: la variable que se quiere predecir (`Y`).
 - **Train/test split**: dividir los datos en un conjunto para entrenar y otro para evaluar, sin solaparse. Ver [02](02-fundamentos-de-machine-learning.md).
+- **Umbral (threshold)**: valor de probabilidad a partir del cual un clasificador predice la clase positiva (0.5 por defecto). Moverlo cambia el balance entre precision y recall. Ver [12](12-metricas-de-evaluacion.md).
 - **Underfitting (sub-ajuste)**: el modelo es demasiado simple y no captura el patrón real, ni siquiera en entrenamiento. Ver [02](02-fundamentos-de-machine-learning.md).
 - **Vector de soporte**: puntos más cercanos a la frontera/tubo de decisión en SVM/SVR, los que determinan su forma. Ver [05](05-regresion-svr.md).
