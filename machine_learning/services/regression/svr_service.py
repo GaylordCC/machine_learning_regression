@@ -6,6 +6,8 @@ regression, SVR with an rbf/poly kernel is distance-based, so features
 """
 import pandas as pd
 
+from sklearn.compose import TransformedTargetRegressor
+from sklearn.pipeline import make_pipeline
 from sklearn.svm import SVR
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import r2_score, root_mean_squared_error
@@ -13,6 +15,7 @@ from sklearn.preprocessing import StandardScaler
 
 from ...core.paths import sample_data_path
 from ...schemas import SvrRegressionSchema
+from ..shared.evaluation import cross_validated_regression
 
 
 class SvrRegressionService:
@@ -45,11 +48,21 @@ class SvrRegressionService:
         rmse = root_mean_squared_error(Y_test, y_predict)
         print(f"SVR kernel={kernel} R2: {r2}, RMSE: {rmse}")
 
+        y_train_predict = sc_Y.inverse_transform(svr.predict(X_train_scaled).reshape(-1, 1)).ravel()
+
+        # Same scaling as above, bundled so it is refit inside every CV fold.
+        cv_model = TransformedTargetRegressor(
+            regressor=make_pipeline(StandardScaler(), SVR(kernel=kernel)),
+            transformer=StandardScaler(),
+        )
+
         return {
             "kernel": kernel,
             "predictions": y_predict.tolist(),
             "rmse": rmse,
             "r2_score": r2,
+            "r2_train": r2_score(Y_train, y_train_predict),
+            **cross_validated_regression(cv_model, X_train, Y_train.ravel()),
         }
 
     def svr_regression(self, request: SvrRegressionSchema):
