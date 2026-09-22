@@ -37,6 +37,8 @@ Este es el esqueleto que vas a reconocer en **cada** método de los services de 
 9. (Opcional) Visualizar/guardar resultados
 ```
 
+Cada etapa, con su código y sus decisiones en este proyecto, se desarrolla en [11-pipeline-de-machine-learning.md](11-pipeline-de-machine-learning.md).
+
 ## 2.4 Train / Test split — por qué se divide el dataset
 
 Si evalúas el modelo con los **mismos datos** con los que lo entrenaste, el modelo puede simplemente "memorizar" y parecer perfecto sin realmente haber aprendido un patrón generalizable. Por eso se reserva una porción (típicamente 20-30%) que el modelo **nunca ve durante el entrenamiento**, y se evalúa solo con esa porción.
@@ -58,6 +60,8 @@ X_train, X_test, Y_train, Y_test = train_test_split(X, Y, test_size=0.2, random_
 Cómo detectarlo: comparar la métrica en train vs. test. Si train es mucho mejor que test → overfitting.
 
 ## 2.6 Métricas de evaluación
+
+> Este apartado es un resumen. Cada métrica, con ejemplos, casos de uso y flujos de decisión, se desarrolla en [12-metricas-de-evaluacion.md](12-metricas-de-evaluacion.md).
 
 ### Para regresión
 
