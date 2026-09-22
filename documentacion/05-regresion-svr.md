@@ -51,6 +51,8 @@ y_predict_scaled = svr.predict(X_test_scaled)
 y_predict = sc_Y.inverse_transform(y_predict_scaled.reshape(-1, 1)).ravel()  # de vuelta a unidades reales
 ```
 
+La respuesta incluye `r2_score` y `rmse` sobre test, `r2_train` y la validación cruzada de 5 particiones sobre train (`cv_r2_*`, `cv_rmse_*`). Para que el escalado se reajuste en cada partición, la validación cruzada usa el mismo modelo encapsulado en un `Pipeline` con `TransformedTargetRegressor` (que escala también `Y`). Con el kernel `rbf`: `r2_score` 0.985, `r2_train` 0.984 y `cv_r2_mean` 0.976 ± 0.021, es decir, un modelo estable y sin señales de overfitting. Ver [12](12-metricas-de-evaluacion.md).
+
 ## 5.4 Escalado de variables
 
 El servicio escala `X` e `Y` antes de entrenar el `SVR`. A diferencia de `LinearRegression` (indiferente a la escala), **SVR con kernel `rbf`/`poly` es sensible a la escala** de las variables, porque el kernel calcula distancias entre puntos — si `TV` va de 0 a 300 y `Radio` va de 0 a 50, `TV` dominaría el cálculo de distancia solo por tener números más grandes, no porque sea más importante.
