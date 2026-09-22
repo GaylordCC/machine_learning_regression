@@ -45,7 +45,9 @@ Puntos clave:
 
 - `PolynomialFeatures(degree=...)` transforma cada valor de `X` en un vector `[1, X, X², ..., X^degree]`. Es un **transformador de features**, igual en espíritu al `OneHotEncoder`/`StandardScaler` que viste en fundamentos — no entrena nada, solo reestructura los datos.
 - `degree` es un parámetro del request (`PolynomialRegressionSchema`, `machine_learning/schemas.py`, default 4), validado entre 1 y 10. Se puede enviar desde Swagger sin tocar código.
-- El endpoint entrena y grafica **ambos modelos** (lineal y polinómico) y devuelve `r2_linear` y `r2_polynomial` en la respuesta — puedes comparar numéricamente los dos sin mirar la consola.
+- El endpoint entrena y grafica **ambos modelos** (lineal y polinómico) y devuelve en la respuesta:
+  - `r2_linear` y `r2_polynomial`: **ajuste** sobre las mismas 10 filas con las que se entrenó (no miden generalización).
+  - `r2_linear_cv`, `rmse_linear_cv`, `r2_polynomial_cv` y `rmse_polynomial_cv`: validación cruzada *leave-one-out*, donde cada fila se predice con un modelo que no la vio.
 
 ## 4.4 El hiperparámetro más importante: `degree`
 
@@ -65,10 +67,12 @@ curl -X POST http://localhost:8080/v1/polynomial-regression -H "Content-Type: ap
 
 ## 4.5 Por qué no hay train/test split aquí
 
+> Como no hay split, la generalización se mide con *leave-one-out* (ver el punto anterior y [12](12-metricas-de-evaluacion.md), §12.8).
+
 Notarás que, a diferencia de los demás métodos de regresión, `polynomical_regression()` entrena con **todos** los datos (no hay `train_test_split`). Con solo 10 filas, separar un 20% para test dejaría 2 puntos de test — insuficiente para una evaluación confiable. Es una decisión razonable para un dataset de juguete como este, pero **no sería aceptable en un proyecto real**: siempre que tengas suficientes datos, evalúa con datos que el modelo no haya visto.
 
 ## 4.6 Para seguir practicando
 
-- Ya puedes comparar `r2_linear` vs `r2_polynomial` directamente en la respuesta del endpoint — corre el experimento del §4.4 y anota en qué `degree` empieza a verse overfitting (pista: con solo 10 filas, pasado `degree=6-7` el `r2_polynomial` se acerca sospechosamente a 1.0).
+- Compara `r2_polynomial` (ajuste) con `r2_polynomial_cv` (*leave-one-out*) para distintos `degree` y anota en cuál empiezan a separarse (con los datos del proyecto: `degree=4` da 0.993 de ajuste y 0.869 en *leave-one-out*; `degree=9` da 1.000 de ajuste y −15.19 en *leave-one-out*: el modelo memoriza los 10 puntos y predice muy mal los que no vio).
 - Agrega un endpoint (o parámetro) para predecir el salario de un valor específico de `years` no visto (ej. `years=2.5`) usando `poly.transform([[2.5]])` (sin `fit`, reutilizando el transformador ya ajustado) — practica la diferencia entre `fit_transform` y `transform` que se explicó en [02](02-fundamentos-de-machine-learning.md).
 - Investiga `Pipeline` de scikit-learn (`sklearn.pipeline.Pipeline`) para encadenar `PolynomialFeatures` + `LinearRegression` en un solo objeto — es el patrón profesional que reemplaza hacer los pasos "a mano" como en este código (más en [10-hoja-de-ruta.md](10-hoja-de-ruta.md)).
