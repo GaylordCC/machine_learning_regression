@@ -4,7 +4,7 @@
 
 Este capítulo cubre `handle_classification_image` (📍 `machine_learning/services/classification/image_classification_service.py` · Endpoint: `POST /v1/classification-algorithm`) — el ejercicio más avanzado del proyecto en cuanto a **evaluación rigurosa de un modelo**, aunque el modelo en sí (SGDClassifier) es relativamente simple. Está inspirado directamente en el capítulo 3 de *Hands-On Machine Learning* (Aurélien Géron), el mismo origen que el pipeline de `housing.csv`.
 
-La respuesta del endpoint es un JSON estructurado (`cross_val_accuracy`, `confusion_matrix`, `precision`, `recall`, `f1_score`).
+La respuesta del endpoint es un JSON estructurado con dos grupos de métricas: las de la validación cruzada sobre train (`cross_val_accuracy`, `confusion_matrix`, `precision`, `recall`, `f1_score`) y las del conjunto de test de MNIST (`test_precision`, `test_recall`, `test_f1_score`, `test_roc_auc`).
 
 ## 8.1 Dataset: MNIST
 
@@ -98,6 +98,22 @@ precision_score(Y_train_5, Y_train_predict)   # TP / (TP + FP) → de lo que dij
 recall_score(Y_train_5, Y_train_predict)       # TP / (TP + FN) → de todos los 5 reales, ¿cuántos detectó?
 f1_score(Y_train_5, Y_train_predict)            # balance entre ambas
 ```
+
+### Evaluación sobre el conjunto de test
+
+La validación cruzada se hace solo sobre las 60 000 imágenes de train. Las 10 000 imágenes de test, que el modelo nunca vio, se usan como comprobación final:
+
+```python
+Y_test_predict = sgd_classifier.predict(X_test)
+Y_test_score = sgd_classifier.decision_function(X_test)   # puntaje de decisión, no una probabilidad
+
+precision_score(Y_test_5, Y_test_predict)   # test_precision
+recall_score(Y_test_5, Y_test_predict)      # test_recall
+f1_score(Y_test_5, Y_test_predict)          # test_f1_score
+roc_auc_score(Y_test_5, Y_test_score)       # test_roc_auc
+```
+
+`SGDClassifier` no entrega probabilidades por defecto, pero **ROC-AUC solo necesita el orden de los puntajes**, así que `decision_function` es suficiente. Comparar las métricas de la validación cruzada con las de test indica si el modelo se comporta igual con datos completamente nuevos. Ver [12](12-metricas-de-evaluacion.md).
 
 ## 8.6 El trade-off Precision vs. Recall
 
