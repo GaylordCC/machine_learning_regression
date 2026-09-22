@@ -7,10 +7,12 @@ with your own eyes.
 import pandas as pd
 
 from sklearn.linear_model import LinearRegression
+from sklearn.pipeline import make_pipeline
 from sklearn.preprocessing import PolynomialFeatures
 from sklearn.metrics import r2_score
 
 from ...schemas import PolynomialRegressionSchema
+from ..shared.evaluation import leave_one_out_regression
 from ..shared.plotting import saved_figure
 
 POSITIONS = [
@@ -38,7 +40,12 @@ class PolynomialRegressionService:
 
     def _train(self, data: pd.DataFrame, degree: int) -> dict:
         """Fit linear + polynomial regression and score both. Pure: no I/O,
-        no plotting -- testable with any DataFrame shaped the same way."""
+        no plotting -- testable with any DataFrame shaped the same way.
+
+        `r2_linear`/`r2_polynomial` measure fit on the same 10 rows the models
+        were trained on. With so few rows a train/test split is not viable, so
+        generalization is measured with leave-one-out predictions instead.
+        """
         X = data["years"].values.reshape(-1, 1)
         Y = data["salary"].values
 
@@ -53,10 +60,19 @@ class PolynomialRegressionService:
         y_pred_poly = poly_model.predict(X_poly)
         y_pred_linear = linear_model.predict(X)
 
+        loo_linear = leave_one_out_regression(LinearRegression(), X, Y)
+        loo_polynomial = leave_one_out_regression(
+            make_pipeline(PolynomialFeatures(degree=degree), LinearRegression()), X, Y
+        )
+
         return {
             "degree": degree,
             "r2_linear": r2_score(Y, y_pred_linear),
             "r2_polynomial": r2_score(Y, y_pred_poly),
+            "r2_linear_cv": loo_linear["r2"],
+            "rmse_linear_cv": loo_linear["rmse"],
+            "r2_polynomial_cv": loo_polynomial["r2"],
+            "rmse_polynomial_cv": loo_polynomial["rmse"],
             "X": X,
             "y_pred_linear": y_pred_linear,
             "y_pred_poly": y_pred_poly,
@@ -77,6 +93,10 @@ class PolynomialRegressionService:
             "degree": result["degree"],
             "r2_linear": result["r2_linear"],
             "r2_polynomial": result["r2_polynomial"],
+            "r2_linear_cv": result["r2_linear_cv"],
+            "rmse_linear_cv": result["rmse_linear_cv"],
+            "r2_polynomial_cv": result["r2_polynomial_cv"],
+            "rmse_polynomial_cv": result["rmse_polynomial_cv"],
             "data": data.to_dict(orient="records"),
             "plot_file": fig.filename,
         }
