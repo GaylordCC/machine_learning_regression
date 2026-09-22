@@ -46,6 +46,7 @@ machine_learning/
 │   ├── shared/
 │   │   ├── housing_preprocessing.py       # Pipeline compartido de housing.csv
 │   │   ├── social_ads_preprocessing.py    # Pipeline compartido de Social_Network_Ads.csv
+│   │   ├── evaluation.py                  # Validación cruzada y evaluación de clasificadores binarios
 │   │   └── plotting.py                    # saved_figure(): guarda y cierra siempre la figura de matplotlib
 │   ├── regression/
 │   │   ├── linear_regression_service.py     # EDA + regresión simple + múltiple
@@ -78,7 +79,8 @@ Ejemplo con `POST /v1/linear-regression`:
    - Arma `X` (la columna elegida) e `Y` (Sales).
    - Divide en train/test, entrena `LinearRegression`, calcula `RMSE`/`R²`.
    - Genera y guarda un gráfico en `results_graphics/`.
-   - Devuelve `{"predictions": [...], "rmse": ..., "r2_score": ..., "plot_file": ...}`.
+   - Valida el modelo (R² en train, validación cruzada sobre train).
+   - Devuelve `{"predictions": [...], "rmse": ..., "r2_score": ..., "r2_train": ..., "cv_r2_mean": ..., "plot_file": ...}` (entre otros campos).
 4. FastAPI serializa la respuesta a JSON.
 
 ## 1.4 Endpoints disponibles
@@ -108,7 +110,7 @@ Todos los hiperparámetros son opcionales en el body: si se envía `{}` (o nada)
 `core/paths.py` calcula la ruta del proyecto con `pathlib` a partir de `__file__`, de modo que ningún `pd.read_csv(...)` depende de una ruta absoluta de una máquina concreta. Esto permite ejecutar el proyecto igual en local y dentro del contenedor Docker.
 
 ### Sin fuga de datos (data leakage) en el escalado
-`services/shared/social_ads_preprocessing.py` hace `fit_transform` solo sobre train y `transform` (sin `fit`) sobre test. La regresión logística y KNN comparten esta misma preparación.
+`services/shared/social_ads_preprocessing.py` devuelve los datos sin escalar y cada clasificador los encapsula en un `Pipeline` (`StandardScaler` + modelo): el escalador se ajusta solo con train y se reutiliza en test, y la validación cruzada lo reajusta dentro de cada partición. La regresión logística y KNN comparten esta misma preparación.
 
 ### SVR con variables escaladas
 `services/regression/svr_service.py` escala `X` **e `Y`** (ver por qué en [05](05-regresion-svr.md)) y des-escala las predicciones con `inverse_transform` antes de devolverlas. SVR con kernel `rbf` es sensible a la escala: en pruebas locales, el `R²` fue de ~0.60 sin escalar frente a ~0.98 escalando.
@@ -126,7 +128,7 @@ Todos los `train_test_split` usan `random_state` fijo (42 en regresión, 0 en cl
 `main.py` ejecuta `matplotlib.use("Agg")` antes de que cualquier módulo importe `pyplot`. El backend por defecto (`tkagg`) está pensado para mostrar ventanas y es inestable en un proceso servidor sin entorno gráfico: ejecutar varios endpoints con gráficos en el mismo proceso puede terminar en un *crash* nativo (`Fatal Python error: Aborted`). `Agg` solo escribe archivos y es la práctica estándar para servidores que generan gráficos.
 
 ### Respuestas JSON estructuradas
-Todos los endpoints devuelven JSON con las métricas relevantes (`r2_score`, `rmse`, `precision`, `recall`, `f1_score`, según el caso), visibles directamente en Swagger sin consultar los logs del servidor.
+Todos los endpoints devuelven JSON con las métricas relevantes (`r2_score`, `rmse`, `precision`, `recall`, `f1_score`, `roc_auc`, según el caso) y con los diagnósticos de evaluación (métrica de train, validación cruzada), visibles directamente en Swagger sin consultar los logs del servidor. Ver [11](11-pipeline-de-machine-learning.md) y [12](12-metricas-de-evaluacion.md).
 
 ### Manejo de errores centralizado
 Los services no construyen `HTTPException`: levantan excepciones de dominio de `core/exceptions.py` (`InvalidTrainingDataError` → 422, `UpstreamServiceError` → 503), que `main.py` traduce a respuestas HTTP. Cualquier error no previsto termina en un handler genérico que responde 500 sin exponer detalles internos.
@@ -141,6 +143,7 @@ El directorio `tests/` usa `pytest` + `TestClient` de FastAPI:
 - `tests/test_classification.py` — regresión logística con métricas exactas, y KNN (alcanzable y con validación de `n_neighbors`).
 - `tests/test_image_classification.py` — timeout de la descarga de MNIST, sin usar la red.
 - `tests/test_plotting.py` — nombres únicos de gráficos, concurrencia y limpieza de archivos temporales.
+- `tests/test_evaluation.py` — validación cruzada y evaluación de clasificadores con datos sintéticos.
 - `tests/test_exceptions.py` — mapeo de excepciones de dominio a códigos HTTP.
 - `tests/test_security.py` — hash de contraseñas con bcrypt.
 
@@ -156,5 +159,5 @@ Ver [10-hoja-de-ruta.md](10-hoja-de-ruta.md) para ideas de qué testear a medida
 Ideas para cuando el proyecto crezca:
 
 - **Separar entrenamiento de predicción**: hoy cada request entrena el modelo desde cero. El siguiente paso natural es persistir modelos entrenados con `joblib` y separar `POST /train` de `POST /predict` (ver [10-hoja-de-ruta.md](10-hoja-de-ruta.md)).
-- **`sklearn.pipeline.Pipeline` + `ColumnTransformer`**: reemplazaría el patrón manual `fit`/`transform` que usan `svr_service.py` y `social_ads_preprocessing.py`, haciendo estructuralmente imposible la fuga de datos.
+- **`sklearn.pipeline.Pipeline` + `ColumnTransformer`**: ya se usa en la regresión logística y KNN; reemplazaría el patrón manual `fit`/`transform` que aún usan `svr_service.py` y el preprocesamiento de `housing.csv`, haciendo estructuralmente imposible la fuga de datos.
 - **Un router por bloque temático** al agregar clustering/PCA (`routers/clustering.py`, `services/clustering/`), siguiendo el mismo patrón que ya existe.
