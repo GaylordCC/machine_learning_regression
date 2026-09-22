@@ -24,6 +24,8 @@ No es documentación de "cómo usar la API" (para eso está el `README.md` de la
 | 8 | [08-clasificacion-mnist-y-metricas.md](08-clasificacion-mnist-y-metricas.md) | Clasificación de imágenes (MNIST), validación cruzada y métricas |
 | 9 | [09-glosario.md](09-glosario.md) | Glosario de términos de ML en español |
 | 10 | [10-hoja-de-ruta.md](10-hoja-de-ruta.md) | Qué falta por aprender/implementar para seguir creciendo el proyecto |
+| 11 | [11-pipeline-de-machine-learning.md](11-pipeline-de-machine-learning.md) | El pipeline completo: extracción, limpieza y preparación, división, entrenamiento, evaluación y entrega |
+| 12 | [12-metricas-de-evaluacion.md](12-metricas-de-evaluacion.md) | Métricas de evaluación (R², MSE, RMSE, MAE, matriz de confusión, accuracy, precision, recall, F1, ROC-AUC): cómo se usan, comparación, casos de uso, flujos y el proceso de evaluación del proyecto |
 
 ## Mapa rápido: técnica ↔ archivo de código
 
