@@ -30,8 +30,8 @@ Hoy el proyecto es 100% supervisado. `Mall_Customers.csv` ya está en `sample_da
 
 - **Regularización (Ridge, Lasso, ElasticNet)**: variantes de regresión lineal que penalizan coeficientes grandes para reducir overfitting, especialmente útil cuando hay muchas features correlacionadas (como en `housing.csv`). Aplícalo sobre los ejercicios de [03](03-regresion-lineal-simple-y-multiple.md) y [06](06-arboles-de-decision-y-random-forest.md).
 - **GridSearchCV / RandomizedSearchCV**: búsqueda automática del mejor hiperparámetro (ej. `max_depth` del árbol, `k` de KNN, `degree` del polinomio) en vez de probar manualmente. Reemplaza el loop manual de `_incremental_column_scores` por una búsqueda sistemática.
-- **`sklearn.pipeline.Pipeline`**: encadena preprocesamiento (escalado, encoding) + modelo en un solo objeto, evitando el error de `fit_transform` sobre test descrito en [07](07-regresion-logistica-y-knn.md) — con un `Pipeline`, ese error es estructuralmente imposible de cometer.
-- **`ColumnTransformer`**: aplica transformaciones distintas a distintas columnas dentro de un mismo `Pipeline` (ej. `StandardScaler` a columnas numéricas + `OneHotEncoder` a categóricas, en un solo paso) — resuelve de forma elegante el patrón que hoy haces "a mano" en `housing.csv` y `Social_Network_Ads.csv`.
+- **`sklearn.pipeline.Pipeline`**: encadena preprocesamiento (escalado, encoding) + modelo en un solo objeto, evitando el error de `fit_transform` sobre test descrito en [07](07-regresion-logistica-y-knn.md) — con un `Pipeline`, ese error es estructuralmente imposible de cometer. Ya se aplica en la regresión logística y KNN (`StandardScaler` + modelo); queda pendiente en SVR, que escala `X` e `Y` a mano.
+- **`ColumnTransformer`**: aplica transformaciones distintas a distintas columnas dentro de un mismo `Pipeline` (ej. `StandardScaler` a columnas numéricas + `OneHotEncoder` a categóricas, en un solo paso) — resuelve de forma elegante el patrón manual de `housing.csv` (imputación por mediana y codificación calculadas sobre el dataset completo, antes del split) y la codificación de `Social_Network_Ads.csv`.
 - **Feature importance / interpretabilidad**: `feature_importances_` en árboles/Random Forest, coeficientes en modelos lineales, y herramientas más avanzadas como **SHAP** para explicar predicciones individuales.
 
 ## 10.5 Persistencia y despliegue — cerrar el ciclo de un modelo real
@@ -57,7 +57,7 @@ Si quieres una secuencia recomendada para las próximas semanas, este es un orde
 
 1. Completar los puntos de §10.1 (son rápidos y consolidan lo ya visto).
 2. Implementar K-Means sobre `Mall_Customers.csv` — primer contacto con no supervisado.
-3. Aprender `Pipeline` + `ColumnTransformer` y refactorizar `handle_logistic_classification` con ellos — consolida el concepto de data leakage de forma práctica.
+3. Aprender `ColumnTransformer` y aplicarlo al preprocesamiento de `housing.csv` dentro de un `Pipeline` (imputación y codificación ajustadas solo con train) — consolida el concepto de data leakage de forma práctica.
 4. Agregar Naive Bayes y SVC sobre `Social_Network_Ads.csv`, comparar los 4-5 modelos de clasificación entre sí con una tabla de métricas.
 5. Agregar `GridSearchCV` a Random Forest sobre `housing.csv`.
 6. Implementar guardado/carga de modelos con `joblib` para al menos un endpoint.
