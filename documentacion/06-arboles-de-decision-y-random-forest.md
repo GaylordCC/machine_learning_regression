@@ -61,24 +61,30 @@ La matriz de correlación mide, para cada par de columnas numéricas, qué tan r
 
 ```python
 def _incremental_column_scores(model_factory, data_for_corr, encoded_df):
-    y = data_for_corr["median_house_value"].values
     columns_used = []
     scores = []
 
     for col in HOUSING_MODEL_COLUMNS:
         columns_used.append(col)
-        X = pd.concat([data_for_corr[columns_used], encoded_df], axis=1).values
-        X_train, X_test, Y_train, Y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+        # mismo split 80/20 (random_state=42) sobre las columnas usadas hasta ahora + ocean_proximity codificada
+        X_train, X_test, Y_train, Y_test = _train_test_for_columns(columns_used, data_for_corr, encoded_df)
 
         model = model_factory()          # LinearRegression() / DecisionTreeRegressor(...) / RandomForestRegressor(...)
         model.fit(X_train, Y_train)
         y_pred = model.predict(X_test)
-        scores.append({"columns": list(columns_used), "r2_score": r2_score(Y_test, y_pred)})
+        scores.append({
+            "columns": list(columns_used),
+            "r2_score": r2_score(Y_test, y_pred),
+            "r2_train": r2_score(Y_train, model.predict(X_train)),
+            "rmse": root_mean_squared_error(Y_test, y_pred),
+        })
 
     return scores
 ```
 
-En vez de entrenar un solo modelo con todas las columnas de una vez, **entrena un modelo nuevo en cada iteración, agregando una columna más cada vez** (siempre concatenando las columnas de `ocean_proximity` codificadas). La respuesta del endpoint incluye `scores_by_columns`, una lista con el `R²` obtenido en cada paso — puedes ver directamente en el JSON cómo cambia el `R²` a medida que agregas más información: un experimento de **selección de features**.
+En vez de entrenar un solo modelo con todas las columnas de una vez, **entrena un modelo nuevo en cada iteración, agregando una columna más cada vez** (siempre concatenando las columnas de `ocean_proximity` codificadas). La respuesta del endpoint incluye `scores_by_columns`, una lista con, en cada paso, el `R²` sobre test (`r2_score`), el `R²` sobre train (`r2_train`) y el `rmse` sobre test — puedes ver directamente en el JSON cómo cambian a medida que agregas más información: un experimento de **selección de features**. Comparar `r2_train` con `r2_score` en cada paso muestra si las columnas nuevas aportan señal o solo se memorizan.
+
+Además, la respuesta trae `cross_validation`: la validación cruzada de 5 particiones (media y desviación de `R²` y `RMSE`) del modelo con **todas** las columnas. Se calcula solo sobre ese modelo y no en cada paso porque multiplicaría el tiempo de la petición por el número de pasos.
 
 Vas a notar, por ejemplo, que `median_income` sola ya explica una buena parte del precio (es la variable más predictiva, consistente con el análisis de correlación del paso 4), y que agregar `latitude`/`longitude` casi siempre ayuda bastante más (porque en California, la ubicación geográfica está muy ligada al precio de la vivienda — cercanía a la costa, a ciudades como San Francisco, etc.).
 
@@ -99,7 +105,7 @@ Usa `LinearRegression()` como línea base (baseline): antes de probar modelos m�
 curl -X POST http://localhost:8080/v1/decision-tree-regression -H "Content-Type: application/json" -d '{"max_depth": 8}'
 ```
 
-Compara el `r2_score` del último paso (`scores_by_columns[-1]`) con `max_depth=None` vs `max_depth=8` vs `max_depth=3` — vas a ver el trade-off underfitting/overfitting directamente en los números.
+Compara el `r2_score` del último paso (`scores_by_columns[-1]`) con `max_depth=None` vs `max_depth=8` vs `max_depth=3` — vas a ver el trade-off underfitting/overfitting directamente en los números. Con `max_depth=None`, el último paso da `r2_train` de 1.000 frente a un `r2_score` de 0.627 en test (y 0.635 ± 0.019 en validación cruzada): el árbol memoriza el train por completo.
 
 ### `random_forest_regression` (`POST /v1/random-forest-regression`) → Random Forest
 
@@ -107,7 +113,7 @@ Compara el `r2_score` del último paso (`scores_by_columns[-1]`) con `max_depth=
 
 **Por qué funciona mejor que un árbol solo**: cada árbol individual puede sobre-ajustarse a su muestra particular de datos, pero como cada uno se equivoca de forma distinta (aleatoria), al promediar sus errores tienden a cancelarse — el conjunto (*ensemble*) generaliza mejor que cualquier árbol individual. Es la idea de "la sabiduría de las masas" aplicada a modelos.
 
-El endpoint acepta `n_estimators` y `max_depth` (`RandomForestRegressionSchema`):
+El endpoint acepta `n_estimators` y `max_depth` (`RandomForestRegressionSchema`). Con el valor por defecto (50 árboles) y todas las columnas, el `R²` es 0.815 en test, 0.974 en train y 0.809 ± 0.006 en validación cruzada: una brecha moderada y un resultado muy estable. La petición completa tarda alrededor de 40 s, incluida la validación cruzada:
 
 ```bash
 curl -X POST http://localhost:8080/v1/random-forest-regression -H "Content-Type: application/json" -d '{"n_estimators": 50, "max_depth": 10}'
