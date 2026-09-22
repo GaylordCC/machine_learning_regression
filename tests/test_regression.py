@@ -4,10 +4,12 @@ Each of these trains on a small local CSV (no network I/O), so they stay fast.
 Random Forest is called with a small n_estimators to keep the suite quick while
 still exercising the real training path.
 """
+import math
 import re
 import warnings
 
 import pandas as pd
+import pytest
 
 from machine_learning.core.paths import RESULTS_GRAPHICS_DIR
 from machine_learning.schemas import RandomForestRegressionSchema
@@ -16,6 +18,12 @@ from machine_learning.services.regression.svr_service import SvrRegressionServic
 from machine_learning.services.shared.housing_preprocessing import HOUSING_MODEL_COLUMNS
 
 HOUSING_STEPS = len(HOUSING_MODEL_COLUMNS)
+CV_REGRESSION_KEYS = ("cv_r2_mean", "cv_r2_std", "cv_rmse_mean", "cv_rmse_std")
+
+
+def _assert_cv_regression_keys(body: dict) -> None:
+    for key in CV_REGRESSION_KEYS:
+        assert isinstance(body[key], float) and math.isfinite(body[key]), key
 
 
 def _assert_plot_file(filename: str, expected_prefix: str) -> None:
@@ -36,6 +44,8 @@ def test_linear_regression_train_simple_is_pure_and_needs_no_disk_io():
     result = LinearRegressionService()._train_simple(data, "TV")
     assert result["r2_score"] > 0.9
     assert len(result["predictions"]) == 2  # 20% of 10 rows held out for test
+    assert result["r2_train"] > 0.9
+    assert result["cv_r2_mean"] > 0.9
 
 
 def test_svr_train_is_pure_and_needs_no_disk_io():
@@ -48,6 +58,8 @@ def test_svr_train_is_pure_and_needs_no_disk_io():
     result = SvrRegressionService()._train(data, "rbf")
     assert result["kernel"] == "rbf"
     assert len(result["predictions"]) == 4  # 20% of 20 rows held out for test
+    assert math.isfinite(result["r2_train"])
+    _assert_cv_regression_keys(result)
 
 
 def test_random_forest_default_n_estimators_is_kept_low_for_latency():
@@ -73,6 +85,8 @@ def test_linear_regression_returns_predictions_and_metrics(client):
     assert len(body["predictions"]) > 0
     assert 0 <= body["r2_score"] <= 1
     assert body["rmse"] >= 0
+    assert body["r2_train"] == pytest.approx(0.5912, abs=1e-3)
+    _assert_cv_regression_keys(body)
     _assert_plot_file(body["plot_file"], "plotregression_TV")
 
 
@@ -106,6 +120,8 @@ def test_multi_linear_regression_returns_predictions_and_metrics(client):
     body = response.json()
     assert len(body["predictions"]) > 0
     assert 0 <= body["r2_score"] <= 1
+    assert math.isfinite(body["r2_train"])
+    _assert_cv_regression_keys(body)
     _assert_plot_file(body["plot_file"], "plotmultiregression")
 
 
@@ -116,6 +132,8 @@ def test_svr_regression_returns_predictions_and_metrics(client):
     assert body["kernel"] == "rbf"
     assert len(body["predictions"]) > 0
     assert 0 <= body["r2_score"] <= 1
+    assert math.isfinite(body["r2_train"])
+    _assert_cv_regression_keys(body)
 
 
 def test_svr_regression_does_not_use_deprecated_squared_param(client):
@@ -132,6 +150,8 @@ def test_housing_linear_regression_returns_a_score_per_incremental_column_set(cl
     body = response.json()
     assert body["model"] == "linear_regression"
     assert len(body["scores_by_columns"]) == HOUSING_STEPS
+    assert all({"r2_train", "rmse"} <= score.keys() for score in body["scores_by_columns"])
+    _assert_cv_regression_keys(body["cross_validation"])
     _assert_plot_file(body["plot_files"]["histograms"], "histograms")
     _assert_plot_file(body["plot_files"]["scatter_plot"], "scatter_plot")
     _assert_plot_file(body["plot_files"]["correlation_plot"], "correlation_plot")
@@ -144,6 +164,16 @@ def test_decision_tree_regression_returns_a_score_per_incremental_column_set(cli
     assert body["model"] == "decision_tree"
     assert body["max_depth"] == 6
     assert len(body["scores_by_columns"]) == HOUSING_STEPS
+    _assert_cv_regression_keys(body["cross_validation"])
+
+
+def test_unlimited_depth_decision_tree_memorizes_the_train_set(client):
+    """Train R2 of 1.0 next to a much lower test R2 is the overfitting
+    signature that the test-only metric used to hide."""
+    body = client.post("/v1/decision-tree-regression", json={}).json()
+    last_step = body["scores_by_columns"][-1]
+    assert last_step["r2_train"] == pytest.approx(1.0)
+    assert last_step["r2_train"] - last_step["r2_score"] > 0.2
 
 
 def test_random_forest_regression_returns_a_score_per_incremental_column_set(client):
@@ -153,3 +183,4 @@ def test_random_forest_regression_returns_a_score_per_incremental_column_set(cli
     assert body["model"] == "random_forest"
     assert body["n_estimators"] == 5
     assert len(body["scores_by_columns"]) == HOUSING_STEPS
+    _assert_cv_regression_keys(body["cross_validation"])
