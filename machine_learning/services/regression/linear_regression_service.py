@@ -11,6 +11,7 @@ from sklearn.metrics import root_mean_squared_error, r2_score
 
 from ...core.paths import sample_data_path
 from ...schemas import RegressionSchema
+from ..shared.evaluation import cross_validated_regression
 from ..shared.plotting import saved_figure
 
 ADVERTISING_CSV = "Advertising.csv"
@@ -60,6 +61,8 @@ class LinearRegressionService:
             "predictions": y_predict.tolist(),
             "rmse": rmse,
             "r2_score": r2,
+            "r2_train": r2_score(Y_train, lin_reg.predict(X_train)),
+            **cross_validated_regression(LinearRegression(), X_train, Y_train),
             "X_test": X_test,
             "Y_test": Y_test,
             "y_predict": y_predict,
@@ -98,6 +101,8 @@ class LinearRegressionService:
             "predictions": y_predict.tolist(),
             "rmse": rmse,
             "r2_score": r2,
+            "r2_train": r2_score(Y_train, lin_reg.predict(X_train)),
+            **cross_validated_regression(LinearRegression(), X_train, Y_train),
             "Y_test": Y_test,
             "y_predict": y_predict,
         }
