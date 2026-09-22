@@ -23,11 +23,11 @@ Geométricamente, el modelo aprende una **frontera de decisión** (una línea re
 
 📍 `machine_learning/services/classification/logistic_regression_service.py` · Endpoint: `POST /v1/logistic-regression-classification`
 
-La preparación de datos (encoding de `Gender` + escalado) está factorizada en `services/shared/social_ads_preprocessing.py::prepare_train_test_split()`, porque **KNN usa exactamente el mismo pipeline** (§7.4).
+La preparación de datos (encoding de `Gender` y división train/test) está factorizada en `services/shared/social_ads_preprocessing.py::split_train_test()`, porque **KNN usa exactamente la misma preparación** (§7.4). El escalado se encapsula junto con el modelo en un `Pipeline`.
 
 ### Preparación de datos
 
-Resumen de lo que hace `prepare_train_test_split()`:
+Resumen de lo que hace `split_train_test()`:
 
 ```python
 X = data.iloc[:, [2, 3]]        # columnas Age, EstimatedSalary
@@ -45,31 +45,32 @@ Igual que en `housing.csv` ([06](06-arboles-de-decision-y-random-forest.md)), `G
 ### Escalado sin fuga de datos
 
 ```python
-scaler = StandardScaler()
-X_train = scaler.fit_transform(X_train)   # aprende Y transforma con train
-X_test = scaler.transform(X_test)          # solo transforma, reutilizando lo aprendido en train
+model = make_pipeline(StandardScaler(), LogisticRegression(random_state=0))
+model.fit(X_train, Y_train)       # el escalador aprende media y desviación SOLO de train
+y_pred = model.predict(X_test)    # aplica esas mismas estadísticas a test, sin reajustar
 ```
 
-**Error frecuente que se evita aquí**: hacer `sc_X.fit_transform(X_test)` reajusta el escalador con datos de test en vez de reutilizar la media/desviación aprendidas en train. Así `X_train` y `X_test` quedan escalados con "reglas" distintas — como medir algo con dos reglas calibradas diferente. `prepare_train_test_split()` hace `fit` solo en train, y como KNN reutiliza esa misma función, la garantía aplica a ambos clasificadores a la vez.
+**Error frecuente que se evita aquí**: hacer `sc_X.fit_transform(X_test)` reajusta el escalador con datos de test en vez de reutilizar la media/desviación aprendidas en train. Así `X_train` y `X_test` quedan escalados con "reglas" distintas — como medir algo con dos reglas calibradas diferente. Con el `Pipeline`, el escalador se ajusta solo con train y el error es estructuralmente imposible de cometer. `split_train_test()` devuelve los datos **sin escalar** precisamente para que el `Pipeline` decida cuándo ajustar: además, en la validación cruzada reajusta el escalador dentro de cada partición. KNN usa la misma construcción.
 
 **Por qué la regresión logística sí necesita escalado** (a diferencia de un árbol de decisión): el algoritmo de optimización que ajusta `b0, b1, b2...` (por defecto, en scikit-learn, una variante de descenso de gradiente/`lbfgs`) converge mejor y más rápido cuando las variables están en escalas comparables. Sin escalar, `EstimatedSalary` (decenas de miles) dominaría numéricamente sobre `Age` (decenas) aunque ambas sean igual de relevantes.
 
 ### Entrenamiento y evaluación
 
 ```python
-log_reg = LogisticRegression(random_state=0)
-log_reg.fit(X_train, Y_train)
-y_pred = log_reg.predict(X_test)
-
-return {
-    "confusion_matrix": confusion_matrix(Y_test, y_pred).tolist(),
-    "precision": precision_score(Y_test, y_pred),
-    "recall": recall_score(Y_test, y_pred),
-    "f1_score": f1_score(Y_test, y_pred),
-}
+model = make_pipeline(StandardScaler(), LogisticRegression(random_state=0))
+return evaluate_binary_classifier(model, X_train, Y_train, X_test, Y_test)
 ```
 
-La respuesta llega como JSON estructurado.
+`evaluate_binary_classifier` (`services/shared/evaluation.py`) entrena el modelo y devuelve, como JSON estructurado:
+
+| Campo | Qué es |
+|---|---|
+| `confusion_matrix`, `precision`, `recall`, `f1_score` | Métricas sobre el conjunto de test |
+| `roc_auc` | Calidad de la separación de clases, sin depender del umbral (usa `predict_proba`) |
+| `f1_train` | F1 sobre train, para compararlo con el de test y detectar overfitting |
+| `cv_f1_mean`, `cv_f1_std`, `cv_roc_auc_mean`, `cv_roc_auc_std` | Validación cruzada de 5 particiones sobre train: media y desviación |
+
+Con los datos del proyecto, la regresión logística da `f1_score` 0.829 en test, `f1_train` 0.748 y `cv_f1_mean` 0.741 ± 0.091: el split de test fue favorable, y la desviación alta avisa de que el resultado de un solo split es poco estable. El detalle de cada métrica está en [12](12-metricas-de-evaluacion.md).
 
 ## 7.4 Teoría: K-Nearest Neighbors (KNN)
 
@@ -96,20 +97,14 @@ k=5, y de los 5 vecinos más cercanos: 3 son "Purchased=1", 2 son "Purchased=0"
 
 ```python
 def handle_knn_classification(self, request: KnnClassificationSchema):
-    X_train, X_test, Y_train, Y_test = prepare_train_test_split(random_state=0)  # mismo pipeline que logistic regression
+    X_train, X_test, Y_train, Y_test = split_train_test(random_state=0)  # misma preparación que la regresión logística
 
-    knn = KNeighborsClassifier(n_neighbors=request.n_neighbors)
-    knn.fit(X_train, Y_train)
-    y_pred = knn.predict(X_test)
-
-    return {
-        "n_neighbors": request.n_neighbors,
-        "confusion_matrix": confusion_matrix(Y_test, y_pred).tolist(),
-        "precision": precision_score(Y_test, y_pred),
-        "recall": recall_score(Y_test, y_pred),
-        "f1_score": f1_score(Y_test, y_pred),
-    }
+    model = make_pipeline(StandardScaler(), KNeighborsClassifier(n_neighbors=request.n_neighbors))
+    metrics = evaluate_binary_classifier(model, X_train, Y_train, X_test, Y_test)
+    return {"n_neighbors": request.n_neighbors, **metrics}
 ```
+
+La respuesta incluye los mismos campos que la regresión logística (ver §7.3). Con `k=1`, el `f1_train` es 1.000 (cada punto es su propio vecino) frente a 0.870 en test y 0.808 en validación cruzada: el efecto de memorizar. Con `k=5`, esas cifras son 0.883 en train, 0.913 en test y 0.860 en validación cruzada.
 
 `n_neighbors` (el hiperparámetro `k`) viene del body (`KnnClassificationSchema`, default `5`, validado entre 1 y 50) — pruébalo directamente:
 
@@ -133,5 +128,5 @@ Compara `f1_score` entre ambas respuestas para ver el efecto de `k` muy pequeño
 ## 7.6 Para seguir practicando
 
 - Llama a `/knn-classification` con varios valores de `k` (1, 3, 5, 11, 21, 35) y anota `f1_score` en cada uno — grafica `f1_score` vs. `k` para visualizar el trade-off underfitting/overfitting con datos reales de tu propio proyecto.
-- Con el mismo dataset, compara Regresión Logística vs. KNN vs. un Árbol de Decisión de clasificación (`DecisionTreeClassifier`, que aún no está en el proyecto) usando F1-score — buen ejercicio de comparación de modelos. `prepare_train_test_split()` ya te da los datos listos para reutilizar en un tercer servicio.
+- Con el mismo dataset, compara Regresión Logística vs. KNN vs. un Árbol de Decisión de clasificación (`DecisionTreeClassifier`, que aún no está en el proyecto) usando F1-score — buen ejercicio de comparación de modelos. `split_train_test()` ya te da los datos listos para reutilizar en un tercer servicio, y `evaluate_binary_classifier()` calcula todas las métricas.
 - Agrega `weights='distance'` a `KNeighborsClassifier` (en vez del default `'uniform'`) — hace que vecinos más cercanos pesen más en la votación — y compara el resultado.
